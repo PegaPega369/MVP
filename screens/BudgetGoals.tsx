@@ -37,6 +37,8 @@ const BudgetGoals: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute();
   const { uid } = route.params as RouteParams;
+  const routeUid = uid || (route.params as { uid?: string })?.uid;
+
   
   // Animation values
   const fadeAnim = useState(new Animated.Value(0))[0];
@@ -212,7 +214,7 @@ const BudgetGoals: React.FC = () => {
             <Text style={styles.sectionTitle}>Your Goals</Text>
             <TouchableOpacity 
               style={styles.addButton}
-              onPress={() => navigation.navigate('GoalPage1', { uid })}
+              onPress={() => navigation.navigate('GoalSavings1', { uid: routeUid })}
             >
               <Text style={styles.addButtonText}>+ Add New</Text>
             </TouchableOpacity>
@@ -236,8 +238,8 @@ const BudgetGoals: React.FC = () => {
                 <View style={styles.goalHeader}>
                   <Text style={styles.goalTitle}>{goal.title}</Text>
                   <Text style={styles.goalAmount}>
-                    <Text style={styles.goalCurrent}>₹{goal.current.toLocaleString()}</Text>
-                    <Text style={styles.goalTarget}> / ₹{goal.target.toLocaleString()}</Text>
+                    <Text style={styles.goalCurrent}></Text>
+                    <Text style={styles.goalTarget}></Text>
                   </Text>
                 </View>
                 
@@ -269,7 +271,7 @@ const BudgetGoals: React.FC = () => {
             }
           ]}
         >
-          <Text style={styles.sectionTitle}>Tips to Reach Your Goals</Text>
+          <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>Tips to Reach Your Goals</Text>
           
           <View style={styles.tipCard}>
             <View style={styles.tipIconContainer}>

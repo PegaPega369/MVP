@@ -112,7 +112,7 @@ export const PROFILE_STYLES = {
   sectionHeaderText: {
     fontSize: 17,
     fontWeight: '600' as '600',
-    color: PROFILE_COLORS.text,
+    color: PROFILE_COLORS.primaryLighter,
   } as TextStyle,
   optionContainer: {
     flexDirection: 'row',

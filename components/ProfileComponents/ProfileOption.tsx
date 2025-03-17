@@ -1,7 +1,14 @@
+
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, ViewStyle, TextStyle } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  Animated 
+} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { PROFILE_COLORS, PROFILE_STYLES } from './theme';
+import { COLORS, SHADOWS } from './theme';
 
 interface ProfileOptionProps {
   icon: string;
@@ -12,91 +19,60 @@ interface ProfileOptionProps {
   isLast?: boolean;
   scale?: Animated.Value;
 }
-
 const ProfileOption: React.FC<ProfileOptionProps> = ({
   icon,
   label,
   onPress,
-  rightElement = <Icon name="chevron-forward" size={20} color={PROFILE_COLORS.primaryLight} />,
-  isFirst = false,
-  isLast = false,
-  scale,
+  rightElement,
+  scale = new Animated.Value(1)
 }) => {
-  const handlePressIn = () => {
-    if (scale) {
-      Animated.spring(scale, {
-        toValue: 0.97,
-        friction: 5,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  const handlePressOut = () => {
-    if (scale) {
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 3,
-        tension: 40,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
-
-  // If scale is provided, make the container animated
-  const Container = scale ? Animated.View : View;
-  const containerStyle = scale 
-    ? [{ transform: [{ scale }] }] 
-    : [];
-
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.8}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
+      activeOpacity={0.7}
+      style={styles.optionContainer}
     >
-      <Container style={containerStyle}>
-        <View 
-          style={[
-            styles.optionContainer,
-            isFirst && styles.firstOption,
-            isLast && styles.lastOption
-          ]}
-        >
-          <View style={styles.optionLeft}>
-            <View style={styles.iconContainer}>
-              <Icon name={icon} size={20} color={PROFILE_COLORS.primaryLight} />
-            </View>
-            <Text style={styles.optionText}>{label}</Text>
-          </View>
-          {rightElement}
+      <View style={styles.optionLeft}>
+        <View style={styles.iconContainer}>
+          <Icon name={icon} size={20} color={COLORS.primaryLight} />
         </View>
-      </Container>
+        <Text style={styles.optionText}>{label}</Text>
+      </View>
+      {rightElement || (
+        <Icon name="chevron-forward" size={20} color={COLORS.textDim} />
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   optionContainer: {
-    ...PROFILE_STYLES.optionContainer,
-  } as ViewStyle,
-  firstOption: {
-    borderTopWidth: 0,
-  } as ViewStyle,
-  lastOption: {
-    borderBottomWidth: 0,
-  } as ViewStyle,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: COLORS.cardDark,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(138, 43, 226, 0.1)',
+  },
   optionLeft: {
-    ...PROFILE_STYLES.optionLeft,
-  } as ViewStyle,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   iconContainer: {
-    ...PROFILE_STYLES.iconContainer,
-  } as ViewStyle,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
   optionText: {
-    ...PROFILE_STYLES.optionText,
-  } as TextStyle,
+    fontSize: 16,
+    color: COLORS.text,
+  },
 });
 
 export default ProfileOption;

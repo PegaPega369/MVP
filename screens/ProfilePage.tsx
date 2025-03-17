@@ -18,11 +18,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { PROFILE_COLORS} from '../components/ProfileComponents/theme';
+import { PROFILE_COLORS,SHADOWS,COLORS} from '../components/ProfileComponents/theme';
 import ProfileHeader from '../components/ProfileComponents/ProfileHeader';
 import ProfileOption from '../components/ProfileComponents/ProfileOption';
-import ProfileSection from '../components/ProfileComponents/ProfileSection';
-
+import ProfileSection from '../components/ProfileComponents/ProfileSection'
 
 interface RouteParams {
   uid: string;
@@ -199,7 +198,7 @@ const ProfilePage: React.FC = () => {
             { transform: [{ scale: buttonScale }] }
           ]}>
             <LinearGradient
-              colors={['#3A1A22', '#231537']}
+              colors={['#231537', '#4B0082']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.signOutGradient}
@@ -216,31 +215,32 @@ const ProfilePage: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create<{[key: string]: ViewStyle | TextStyle}>({
+const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: PROFILE_COLORS.background,
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 80, // Space for navbar
+    paddingBottom: 80,
   },
   linkText: {
     fontSize: 14,
-    color: PROFILE_COLORS.primaryLight,
+    color: COLORS.primaryLight,
     fontWeight: '500',
   },
   accountControls: {
     marginHorizontal: 16,
     marginTop: 20,
     marginBottom: 10,
-    backgroundColor: PROFILE_COLORS.cardBackground,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: PROFILE_COLORS.cardBorder,
+    borderColor: 'rgba(138, 43, 226, 0.3)',
     overflow: 'hidden',
+    ...SHADOWS.small,
   },
   switchOption: {
     flexDirection: 'row',
@@ -259,20 +259,21 @@ const styles = StyleSheet.create<{[key: string]: ViewStyle | TextStyle}>({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: PROFILE_COLORS.iconBackground,
+    backgroundColor: 'rgba(138, 43, 226, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
   },
   optionText: {
     fontSize: 16,
-    color: PROFILE_COLORS.text,
+    color: COLORS.text,
   },
   signOutButton: {
     marginHorizontal: 16,
     marginTop: 30,
     borderRadius: 12,
     overflow: 'hidden',
+    ...SHADOWS.medium,
   },
   signOutGradient: {
     paddingVertical: 16,
@@ -280,13 +281,13 @@ const styles = StyleSheet.create<{[key: string]: ViewStyle | TextStyle}>({
     justifyContent: 'center',
   },
   signOutText: {
-    color: PROFILE_COLORS.text,
+    color: COLORS.text,
     fontSize: 16,
     fontWeight: '600',
   },
   appVersion: {
     fontSize: 12,
-    color: PROFILE_COLORS.textMuted,
+    color: COLORS.textMuted,
     textAlign: 'center',
     marginTop: 20,
     marginBottom: 20,

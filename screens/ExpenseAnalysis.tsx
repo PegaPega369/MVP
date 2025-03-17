@@ -138,8 +138,8 @@ const ExpenseAnalysis: React.FC = () => {
           <View style={styles.pieChartContainer}>
             <PieChart
               data={expenseData}
-              width={SCREEN_WIDTH - 48}
-              height={220}
+              width={SCREEN_WIDTH - 80}
+              height={160}
               chartConfig={chartConfig}
               accessor={"amount"}
               backgroundColor={"transparent"}

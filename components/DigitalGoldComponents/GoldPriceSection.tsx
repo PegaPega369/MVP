@@ -215,13 +215,13 @@ const GoldPriceSection: React.FC<GoldPriceSectionProps> = ({
             datasets: [{ data: chartData.data }],
           }}
           width={SCREEN_WIDTH - 60}
-          height={180}
+          height={200}
           yAxisLabel="₹"
           yAxisSuffix=""
           chartConfig={{
-            backgroundColor: COLORS.cardBg,
-            backgroundGradientFrom: COLORS.cardBg,
-            backgroundGradientTo: COLORS.cardBg,
+            backgroundColor: COLORS.background,
+            backgroundGradientFrom: COLORS.background,
+            backgroundGradientTo: COLORS.primaryDark,
             decimalPlaces: 0,
             color: (opacity = 1) => `rgba(138, 43, 226, ${opacity})`,
             labelColor: () => COLORS.textSecondary,
@@ -489,7 +489,9 @@ const styles = StyleSheet.create({
   },
   chart: {
     borderRadius: 16,
-    paddingRight: 0,
+    marginVertical: 5, // Add some spacing from the edges
+    alignSelf: 'center', // Center the chart properly
+    
   },
   timeframeContainer: {
     flexDirection: 'row',
