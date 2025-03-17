@@ -1,0 +1,541 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
+  Animated,
+  Image,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { COLORS, SHADOWS } from '../components/ProfileComponents/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+interface RouteParams {
+  uid: string;
+}
+
+interface GoalProps {
+  id: string;
+  title: string;
+  target: number;
+  current: number;
+  duration: string;
+  dueDate: string;
+  icon: string;
+  color: string;
+}
+
+const BudgetGoals: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const route = useRoute();
+  const { uid } = route.params as RouteParams;
+  
+  // Animation values
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(20))[0];
+  
+  // Dummy goal data (this would come from a database in a real app)
+  const [goals, setGoals] = useState<GoalProps[]>([
+    {
+      id: '1',
+      title: 'New Car Fund',
+      target: 1200000,
+      current: 850000,
+      duration: '2 years',
+      dueDate: 'Dec 2024',
+      icon: 'car',
+      color: '#4CC2FF',
+    },
+    {
+      id: '2',
+      title: 'Vacation Trip',
+      target: 300000,
+      current: 132000,
+      duration: '10 months',
+      dueDate: 'Jan 2024',
+      icon: 'airplane',
+      color: '#FFA94D',
+    },
+    {
+      id: '3',
+      title: 'Emergency Fund',
+      target: 500000,
+      current: 475000,
+      duration: '1 year',
+      dueDate: 'Apr 2024',
+      icon: 'shield',
+      color: '#9775FA',
+    },
+    {
+      id: '4',
+      title: 'Education',
+      target: 800000,
+      current: 245000,
+      duration: '3 years',
+      dueDate: 'Sep 2026',
+      icon: 'school',
+      color: '#38D9A9',
+    },
+  ]);
+
+  // Start animations when component mounts
+  useEffect(() => {
+    StatusBar.setBarStyle('light-content');
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, []);
+
+  // Calculate total savings across all goals
+  const totalSaved = goals.reduce((sum, goal) => sum + goal.current, 0);
+  const totalTarget = goals.reduce((sum, goal) => sum + goal.target, 0);
+  const percentComplete = Math.round((totalSaved / totalTarget) * 100);
+
+  // Function to render progress bar
+  const renderProgressBar = (current: number, target: number) => {
+    const percent = Math.min(100, Math.round((current / target) * 100));
+    
+    return (
+      <View style={styles.progressBarContainer}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${percent}%` }]} />
+        </View>
+        <Text style={styles.progressText}>{percent}%</Text>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="arrow-left" size={24} color={COLORS.text} />
+      </TouchableOpacity>
+      
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Animated.View 
+          style={[
+            styles.headerContainer, 
+            { 
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <Text style={styles.headerTitle}>Budget Goals</Text>
+          <Text style={styles.headerSubtitle}>Track your saving progress</Text>
+        </Animated.View>
+
+        {/* Overall summary card */}
+        <Animated.View
+          style={[
+            styles.summaryCardContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <LinearGradient
+            colors={['#4B0082', '#8A2BE2']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.summaryCard}
+          >
+            <View style={styles.summaryContent}>
+              <Text style={styles.summaryTitle}>Overall Progress</Text>
+              
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryCol}>
+                  <Text style={styles.summaryLabel}>Total Saved</Text>
+                  <Text style={styles.summaryValue}>₹{totalSaved.toLocaleString()}</Text>
+                </View>
+                
+                <View style={styles.summaryCol}>
+                  <Text style={styles.summaryLabel}>Goal Amount</Text>
+                  <Text style={styles.summaryValue}>₹{totalTarget.toLocaleString()}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.summaryProgressBarContainer}>
+                <View style={styles.summaryProgressBar}>
+                  <View 
+                    style={[
+                      styles.summaryProgressFill, 
+                      { width: `${percentComplete}%` }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.summaryProgressText}>{percentComplete}% Complete</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Goals List */}
+        <Animated.View
+          style={[
+            styles.goalsSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Your Goals</Text>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={() => navigation.navigate('GoalPage1', { uid })}
+            >
+              <Text style={styles.addButtonText}>+ Add New</Text>
+            </TouchableOpacity>
+          </View>
+
+          {goals.map((goal) => (
+            <TouchableOpacity 
+              key={goal.id} 
+              style={styles.goalCard}
+              onPress={() => {
+                // Navigate to goal details screen
+                // This would be implemented in a real app
+                console.log(`View details for goal: ${goal.title}`);
+              }}
+            >
+              <View style={[styles.goalIconContainer, { backgroundColor: `${goal.color}20` }]}>
+                <Icon name={goal.icon} size={24} color={goal.color} />
+              </View>
+              
+              <View style={styles.goalInfo}>
+                <View style={styles.goalHeader}>
+                  <Text style={styles.goalTitle}>{goal.title}</Text>
+                  <Text style={styles.goalAmount}>
+                    <Text style={styles.goalCurrent}>₹{goal.current.toLocaleString()}</Text>
+                    <Text style={styles.goalTarget}> / ₹{goal.target.toLocaleString()}</Text>
+                  </Text>
+                </View>
+                
+                {renderProgressBar(goal.current, goal.target)}
+                
+                <View style={styles.goalFooter}>
+                  <View style={styles.goalMetaItem}>
+                    <Icon name="calendar-clock" size={14} color={COLORS.textDim} />
+                    <Text style={styles.goalMetaText}>{goal.duration}</Text>
+                  </View>
+                  
+                  <View style={styles.goalMetaItem}>
+                    <Icon name="calendar-check" size={14} color={COLORS.textDim} />
+                    <Text style={styles.goalMetaText}>Due: {goal.dueDate}</Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
+
+        {/* Tips Section */}
+        <Animated.View
+          style={[
+            styles.tipsSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <Text style={styles.sectionTitle}>Tips to Reach Your Goals</Text>
+          
+          <View style={styles.tipCard}>
+            <View style={styles.tipIconContainer}>
+              <Icon name="lightbulb-on" size={24} color="#FFA94D" />
+            </View>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Automate Your Savings</Text>
+              <Text style={styles.tipDescription}>Set up automatic transfers to your goal accounts on payday.</Text>
+            </View>
+          </View>
+          
+          <View style={styles.tipCard}>
+            <View style={styles.tipIconContainer}>
+              <Icon name="chart-line-variant" size={24} color="#4CC2FF" />
+            </View>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Track Your Progress</Text>
+              <Text style={styles.tipDescription}>Review your goals weekly to stay motivated and on track.</Text>
+            </View>
+          </View>
+          
+          <View style={styles.tipCard}>
+            <View style={styles.tipIconContainer}>
+              <Icon name="cash-multiple" size={24} color="#38D9A9" />
+            </View>
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Cut Unnecessary Expenses</Text>
+              <Text style={styles.tipDescription}>Identify non-essential spending and redirect those funds toward your goals.</Text>
+            </View>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 100,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(10, 10, 10, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.small,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  headerContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: COLORS.textDim,
+  },
+  summaryCardContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 30,
+  },
+  summaryCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...SHADOWS.medium,
+  },
+  summaryContent: {
+    padding: 20,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 16,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  summaryCol: {},
+  summaryLabel: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  summaryProgressBarContainer: {
+    marginTop: 8,
+  },
+  summaryProgressBar: {
+    height: 6,
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 3,
+    marginBottom: 8,
+  },
+  summaryProgressFill: {
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 3,
+  },
+  summaryProgressText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'right',
+  },
+  goalsSection: {
+    paddingHorizontal: 24,
+    marginBottom: 30,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  addButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(138, 43, 226, 0.3)',
+    borderRadius: 8,
+  },
+  addButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  goalCard: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.cardDark,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    ...SHADOWS.small,
+  },
+  goalIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  goalInfo: {
+    flex: 1,
+  },
+  goalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  goalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  goalAmount: {
+    fontSize: 14,
+  },
+  goalCurrent: {
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  goalTarget: {
+    color: COLORS.textDim,
+  },
+  progressBarContainer: {
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 4,
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 2,
+    marginBottom: 4,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 12,
+    color: COLORS.textDim,
+    textAlign: 'right',
+  },
+  goalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  goalMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  goalMetaText: {
+    fontSize: 12,
+    color: COLORS.textDim,
+    marginLeft: 6,
+  },
+  tipsSection: {
+    paddingHorizontal: 24,
+  },
+  tipCard: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.cardDark,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    ...SHADOWS.small,
+  },
+  tipIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(10, 10, 10, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 4,
+  },
+  tipDescription: {
+    fontSize: 14,
+    color: COLORS.textDim,
+    lineHeight: 20,
+  },
+});
+
+export default BudgetGoals;
