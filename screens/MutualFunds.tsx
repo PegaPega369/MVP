@@ -1,377 +1,451 @@
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React, {useState} from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
+  TouchableOpacity,
+  Animated,
   Dimensions,
+  StatusBar,
   Platform,
 } from 'react-native';
-import {Icon} from 'react-native-elements';
 import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/Feather';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { COLORS, SHADOWS } from './theme';
 
-const {width} = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const MutualFund: React.FC = () => {
+interface RouteParams {
+  uid: string;
+}
+
+// Export interface so it can be used in detail screens
+export interface MutualFundData {
+  id: string;
+  name: string;
+  shortName: string;
+  company: string;
+  type: string;
+  risk: 'Low' | 'Moderate' | 'High';
+  returns: {
+    oneYear: number;
+    threeYear: number;
+    fiveYear: number;
+  };
+  nav: number;
+  aum: number; // in crores
+  expenseRatio: number;
+  minInvestment: number;
+  holdings: {
+    name: string;
+    percentage: number;
+  }[];
+  details: string;
+  established: string;
+}
+
+// Export mutual funds data for reuse in detail screens
+export const mutualFunds: MutualFundData[] = [
+  {
+    id: '1',
+    name: 'Quantum Long Term Equity Value Fund',
+    shortName: 'Take the Leap',
+    company: 'Quantum Mutual Fund',
+    type: 'Equity - Large Cap',
+    risk: 'Moderate',
+    returns: {
+      oneYear: 12.5,
+      threeYear: 15.8,
+      fiveYear: 11.2
+    },
+    nav: 87.42,
+    aum: 1250,
+    expenseRatio: 0.68,
+    minInvestment: 5000,
+    holdings: [
+      { name: 'HDFC Bank', percentage: 8.5 },
+      { name: 'Infosys', percentage: 7.2 },
+      { name: 'Reliance Industries', percentage: 6.8 },
+      { name: 'TCS', percentage: 5.4 },
+      { name: 'ITC Ltd', percentage: 4.9 }
+    ],
+    details: 'A value-oriented fund that invests in fundamentally strong companies with a long-term perspective. The fund maintains a diversified portfolio across sectors with a focus on quality stocks trading at reasonable valuations.',
+    established: '2006'
+  },
+  {
+    id: '2',
+    name: 'Axis Bluechip Fund',
+    shortName: 'Blue Horizon',
+    company: 'Axis Mutual Fund',
+    type: 'Equity - Bluechip',
+    risk: 'Moderate',
+    returns: {
+      oneYear: 14.3,
+      threeYear: 16.7,
+      fiveYear: 13.5
+    },
+    nav: 43.26,
+    aum: 2875,
+    expenseRatio: 0.54,
+    minInvestment: 1000,
+    holdings: [
+      { name: 'ICICI Bank', percentage: 9.1 },
+      { name: 'HDFC Bank', percentage: 8.7 },
+      { name: 'Reliance Industries', percentage: 7.5 },
+      { name: 'Infosys', percentage: 6.8 },
+      { name: 'Bajaj Finance', percentage: 5.2 }
+    ],
+    details: 'A high-quality large-cap fund that invests in top 100 companies by market capitalization. The fund follows a growth-oriented approach with a focus on companies with strong competitive advantages and sustainable business models.',
+    established: '2009'
+  },
+  {
+    id: '3',
+    name: 'SBI Small Cap Fund',
+    shortName: 'Growth Accelerator',
+    company: 'SBI Mutual Fund',
+    type: 'Equity - Small Cap',
+    risk: 'High',
+    returns: {
+      oneYear: 18.9,
+      threeYear: 21.4,
+      fiveYear: 16.8
+    },
+    nav: 107.83,
+    aum: 1590,
+    expenseRatio: 0.78,
+    minInvestment: 5000,
+    holdings: [
+      { name: 'Dixon Technologies', percentage: 4.8 },
+      { name: 'V-Guard Industries', percentage: 4.2 },
+      { name: 'KNR Constructions', percentage: 3.9 },
+      { name: 'JK Paper', percentage: 3.6 },
+      { name: 'Navin Fluorine', percentage: 3.4 }
+    ],
+    details: 'An aggressive small-cap fund that invests in companies ranked between 251-500 by market capitalization. The fund aims to identify future winners with scalable business models, strong management and reasonable valuations.',
+    established: '2013'
+  }
+];
+
+// Helper functions for formatting
+export const formatNumber = (num: number, prefix = '') => {
+  return prefix + num.toLocaleString('en-IN');
+};
+
+export const formatPercentage = (num: number) => {
+  const isPositive = num >= 0;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Icon 
+        name={isPositive ? 'arrow-up' : 'arrow-down'} 
+        size={14} 
+        color={isPositive ? COLORS.success : COLORS.error} 
+        style={{ marginRight: 4 }} 
+      />
+      <Text style={[
+        styles.percentageText,
+        { color: isPositive ? COLORS.success : COLORS.error }
+      ]}>
+        {Math.abs(num).toFixed(1)}%
+      </Text>
+    </View>
+  );
+};
+
+export const getRiskColor = (risk: 'Low' | 'Moderate' | 'High') => {
+  switch (risk) {
+    case 'Low': return COLORS.success;
+    case 'Moderate': return COLORS.warning;
+    case 'High': return COLORS.error;
+    default: return COLORS.warning;
+  }
+};
+
+const MutualFundScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute();
-  const {uid} = route.params || { uid: 'default-uid' };
-  const [selectedFund, setSelectedFund] = useState('');
+  const { uid } = route.params as RouteParams;
+  
+  // Animation values for entry animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  
+  // Start animations when component mounts
+  React.useEffect(() => {
+    StatusBar.setBarStyle('light-content');
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [fadeAnim, slideAnim]);
 
-  const funds = [
-    {
-      name: 'Keep It Steady',
-      fundName: 'Lendbox Fixed',
-      icon: require('../components/assets/Fincraft.png'),
-    },
-    {
-      name: 'Balance It Out',
-      fundName: 'Navi Aggressive Hybrid Fund - Regular Plan Growth',
-      icon: require('../components/assets/Fincraft.png'),
-    },
-    {
-      name: 'Take A Leap',
-      fundName: 'Navi Large & Midcap Fund - Regular Plan Growth',
-      icon: require('../components/assets/Fincraft.png'),
-      popular: true,
-    },
-  ];
+  // Navigate to detail page
+  const navigateToFundDetail = (fundId: string) => {
+    switch (fundId) {
+      case '1':
+        navigation.navigate('MutualFund1', { fundId });
+        break;
+      case '2':
+        navigation.navigate('MutualFund2', { fundId });
+        break;
+      case '3':
+        navigation.navigate('MutualFund3', { fundId });
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
-    <View style={styles.background}>
-      <ScrollView 
+    <View style={styles.container}>
+      {/* Back button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="arrow-left" size={24} color={COLORS.text} />
+      </TouchableOpacity>
+      
+      <ScrollView
         style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <Icon name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Mutual Funds</Text>
-        </View>
-
-        <View style={styles.container}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.investment}>Investment</Text>
-            <Text style={styles.preferance}>Preference</Text>
-          </View>
-          
-          {funds.map((fund, index) => (
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Animated.View 
+          style={[
+            styles.headerContainer, 
+            { 
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          <Text style={styles.headerTitle}>Curated Mutual Funds</Text>
+          <Text style={styles.headerSubtitle}>Handpicked mutual funds with strong track records</Text>
+        </Animated.View>
+        
+        {/* Funds List */}
+        <Animated.View 
+          style={[
+            styles.fundsContainer, 
+            { 
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
+          {mutualFunds.map((fund) => (
             <TouchableOpacity 
-              key={index} 
-              onPress={() => setSelectedFund(fund.name)}
-              activeOpacity={0.8}
-              style={styles.fundTouchable}>
-              <LinearGradient
-                colors={selectedFund === fund.name 
-                  ? ['rgba(138, 43, 226, 0.2)', 'rgba(106, 13, 173, 0.3)']
-                  : ['rgba(35, 28, 56, 0.9)', 'rgba(29, 17, 50, 0.95)']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 1}}
-                style={[
-                  styles.fundContainer,
-                  selectedFund === fund.name && styles.selectedFundContainer
-                ]}>
-                
-                {fund.popular && (
-                  <View style={styles.popularBadge}>
-                    <LinearGradient
-                      colors={['#9C27B0', '#673AB7']}
-                      start={{x: 0, y: 0}}
-                      end={{x: 1, y: 0}}
-                      style={styles.popularGradient}>
-                      <Text style={styles.popularChoice}>Popular Choice</Text>
-                      <Icon name="star" size={12} color="#FFF" type="font-awesome" style={styles.starIcon} />
-                    </LinearGradient>
-                  </View>
-                )}
-                
-                <View style={styles.fundInfo}>
-                  <View style={styles.iconWrapper}>
-                    <Image source={fund.icon} style={styles.fundIcon} />
-                  </View>
-                  <View style={styles.fundTextContainer}>
-                    <Text style={styles.fundName}>{fund.name}</Text>
-                    <Text style={styles.fundDetails}>{fund.fundName}</Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.arrowButton}
-                    onPress={() => navigation.navigate('ID', {uid})}>
-                    <LinearGradient
-                      colors={['rgba(138, 43, 226, 0.8)', 'rgba(106, 13, 173, 0.9)']}
-                      style={styles.arrowGradient}
-                      start={{x: 0, y: 0}}
-                      end={{x: 1, y: 0}}>
-                      <Icon name="arrow-forward" size={24} color="#FFFFFF" />
-                    </LinearGradient>
-                  </TouchableOpacity>
+              key={fund.id} 
+              style={styles.fundCard}
+              activeOpacity={0.9}
+              onPress={() => navigateToFundDetail(fund.id)}
+            >
+              <View style={styles.fundHeader}>
+                <View style={styles.fundIcon}>
+                  <Icon 
+                    name={
+                      fund.id === '1' ? 'bar-chart-2' : 
+                      fund.id === '2' ? 'trending-up' : 'activity'
+                    }
+                    size={24} 
+                    color={COLORS.primary} 
+                  />
                 </View>
                 
-                <TouchableOpacity
-                  style={[
-                    styles.selectButton,
-                    selectedFund === fund.name && styles.selectedButton,
-                  ]}
-                  onPress={() => setSelectedFund(fund.name)}>
-                  <LinearGradient
-                    colors={selectedFund === fund.name 
-                      ? ['#9C27B0', '#6A0DAD'] 
-                      : ['#2A1A4A', '#231537']}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 0}}
-                    style={styles.buttonGradient}>
-                    <Text style={styles.selectButtonText}>
-                      {selectedFund === fund.name ? 'Selected' : 'Select Fund'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </LinearGradient>
+                <View style={styles.fundTitleSection}>
+                  <Text style={styles.fundName} numberOfLines={1}>{fund.shortName}</Text>
+                  <View style={styles.fundSubtitle}>
+                    <Text style={styles.fundCompany}>{fund.company}</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.expandButton}>
+                  <Icon 
+                    name="chevron-right" 
+                    size={24} 
+                    color={COLORS.textDim} 
+                  />
+                </View>
+              </View>
+              
+              <View style={styles.fundHighlights}>
+                <View style={styles.highlightItem}>
+                  <Text style={styles.highlightLabel}>1Y Returns</Text>
+                  <View style={styles.highlightValue}>
+                    {formatPercentage(fund.returns.oneYear)}
+                  </View>
+                </View>
+                
+                <View style={styles.highlightItem}>
+                  <Text style={styles.highlightLabel}>NAV</Text>
+                  <Text style={styles.highlightValueText}>₹{fund.nav.toFixed(2)}</Text>
+                </View>
+                
+                <View style={styles.highlightItem}>
+                  <Text style={styles.highlightLabel}>Risk</Text>
+                  <View style={[
+                    styles.riskPill, 
+                    { backgroundColor: getRiskColor(fund.risk) }
+                  ]}>
+                    <Text style={styles.riskText}>{fund.risk}</Text>
+                  </View>
+                </View>
+              </View>
             </TouchableOpacity>
           ))}
-        </View>
+        </Animated.View>
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  container: {
     flex: 1,
-    backgroundColor: '#000000', // Pure black background
+    backgroundColor: COLORS.background,
   },
-  gradientBackground: {
-    flex: 1,
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 16,
+    left: 16,
+    zIndex: 100,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(10, 10, 10, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.small,
   },
   scrollView: {
     flex: 1,
   },
-  container: {
-    flexGrow: 1,
-    padding: 20,
+  scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 100 : 70,
+    paddingBottom: 40,
   },
-  headerGradient: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#8A2BE2',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
+  headerContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 40 : 20,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerText: {
-    marginLeft: 20,
-    color: '#FFFFFF',
-    fontSize: 22,
+  headerTitle: {
+    fontSize: 32,
     fontWeight: 'bold',
+    color: COLORS.text,
+    marginBottom: 8,
   },
-  titleContainer: {
-    marginVertical: 25,
+  headerSubtitle: {
+    fontSize: 16,
+    color: COLORS.textDim,
   },
-  investment: {
-    color: '#C9A1FF',
-    fontSize: 42,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    textShadowColor: 'rgba(138, 43, 226, 0.6)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 5,
+  fundsContainer: {
+    paddingHorizontal: 24,
+    gap: 20,
   },
-  preferance: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontWeight: '300',
-  },
-  fundTouchable: {
+  fundCard: {
+    backgroundColor: COLORS.cardDark,
+    borderRadius: 16,
+    overflow: 'hidden',
     marginBottom: 20,
-    borderRadius: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#8A2BE2',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
-        shadowRadius: 15,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
-  },
-  fundContainer: {
-    borderRadius: 20,
-    padding: 20,
-    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
-    overflow: 'hidden',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    ...SHADOWS.medium,
   },
-  selectedFundContainer: {
-    borderColor: 'rgba(138, 43, 226, 0.8)',
-    borderWidth: 2,
-  },
-  popularBadge: {
-    position: 'absolute',
-    top: 15,
-    right: 15,
-    borderRadius: 15,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#9C27B0',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  popularGradient: {
+  fundHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 15,
+    padding: 20,
+    gap: 16,
   },
-  popularChoice: {
-    color: '#E9D5FF', // Changed to light purple instead of white
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginRight: 5,
-  },
-  starIcon: {
-    marginLeft: 2,
-  },
-  fundInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  iconWrapper: {
+  fundIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: `rgba(${parseInt(COLORS.primary.slice(1, 3), 16)}, ${parseInt(COLORS.primary.slice(3, 5), 16)}, ${parseInt(COLORS.primary.slice(5, 7), 16)}, 0.1)`,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    flexShrink: 0,
   },
-  fundIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-  },
-  fundTextContainer: {
+  fundTitleSection: {
     flex: 1,
   },
   fundName: {
-    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: 4,
   },
-  fundDetails: {
-    color: '#CCCCCC', // Changed from gray to light purple
+  fundSubtitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fundCompany: {
     fontSize: 14,
+    color: COLORS.textDim,
+    marginRight: 12,
+    position: 'relative',
   },
-  arrowButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#8A2BE2',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+  fundType: {
+    fontSize: 14,
+    color: COLORS.textDim,
+    marginLeft: 12,
   },
-  arrowGradient: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
+  expandButton: {
+    padding: 8,
+  },
+  fundHighlights: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+  },
+  highlightItem: {
+    flex: 1,
+  },
+  highlightLabel: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginBottom: 6,
+  },
+  highlightValue: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 20,
   },
-  selectButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  selectedButton: {
-    ...Platform.select({
-      ios: {
-        shadowColor: '#8A2BE2',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  buttonGradient: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderRadius: 12,
-  },
-  selectButtonText: {
-    color: '#FFFFFF',
+  highlightValueText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
+    color: COLORS.text,
   },
+  percentageText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  riskPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  riskText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'white',
+  }
 });
 
-export default MutualFund;
+export default MutualFundScreen;

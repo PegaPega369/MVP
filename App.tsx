@@ -27,6 +27,9 @@ import GoldPage3 from './screens/GoalSavings3';
 import Settings from './screens/Settings';
 import TransactionHistory from './screens/TransactionHistory';
 import MutualFund from './screens/MutualFunds';
+import MutualFund1Screen from './screens/MutualFund1';
+import MutualFund2Screen from './screens/MutualFund2';
+import MutualFund3Screen from './screens/MutualFund3';
 import SIPCalculator from './screens/SIPCalculator';
 import InvestmentDetail from './screens/InvestmentDetails';
 import AccountDetails from './screens/Account/AccountDetails';
@@ -79,6 +82,9 @@ const App: React.FC = () => {
             <Stack.Screen name="MonthlySavings" component={MonthlySavings} options={{ headerShown: false }} />
             <Stack.Screen name="Gold" component={DigitalGold} options={{ headerShown: false }} />
             <Stack.Screen name="MutualFund" component={MutualFund} options={{ headerShown: false }} />
+            <Stack.Screen name="MutualFund1" component={MutualFund1Screen} options={{ headerShown: false }} />
+            <Stack.Screen name="MutualFund2" component={MutualFund2Screen} options={{ headerShown: false }} />
+            <Stack.Screen name="MutualFund3" component={MutualFund3Screen} options={{ headerShown: false }} />
             <Stack.Screen name="Expenses" component={ExpenseTracker} options={{ headerShown: false }} />
             <Stack.Screen name="GoalSavings1" component={GoalPage1} options={{ headerShown: false }} />
             <Stack.Screen name="GoalSavings2" component={GoalPage2} options={{ headerShown: false }} />

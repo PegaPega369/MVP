@@ -90,17 +90,21 @@ export const SHADOWS = {
   },
 };
 
-export const PROFILE_STYLES = {
+type Styles = {
+  [key: string]: ViewStyle | TextStyle | ImageStyle;
+};
+
+export const PROFILE_STYLES: Styles = {
   sectionContainer: {
     marginTop: 16,
     marginHorizontal: 16,
     borderRadius: 16,
     backgroundColor: PROFILE_COLORS.cardBackground,
-    overflow: 'hidden' as 'hidden',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: PROFILE_COLORS.cardBorder,
     ...SHADOWS.small,
-  } as ViewStyle,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -108,12 +112,12 @@ export const PROFILE_STYLES = {
     paddingVertical: 16,
     paddingHorizontal: 20,
     backgroundColor: 'rgba(35, 21, 55, 0.5)',
-  } as ViewStyle,
+  },
   sectionHeaderText: {
     fontSize: 17,
-    fontWeight: '600' as '600',
+    fontWeight: '600',
     color: PROFILE_COLORS.primaryLighter,
-  } as TextStyle,
+  },
   optionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -123,11 +127,11 @@ export const PROFILE_STYLES = {
     backgroundColor: PROFILE_COLORS.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  } as ViewStyle,
+  },
   optionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-  } as ViewStyle,
+  },
   iconContainer: {
     width: 36,
     height: 36,
@@ -136,28 +140,28 @@ export const PROFILE_STYLES = {
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
-  } as ViewStyle,
+  },
   optionText: {
     fontSize: 16,
     color: PROFILE_COLORS.text,
-  } as TextStyle,
+  },
   linkText: {
     fontSize: 14,
     color: PROFILE_COLORS.primaryLight,
-    fontWeight: '500' as '500',
-  } as TextStyle,
+    fontWeight: '500',
+  },
   gradientButton: {
     marginHorizontal: 16,
     marginVertical: 10,
     borderRadius: 12,
-    overflow: 'hidden' as 'hidden',
+    overflow: 'hidden',
     ...SHADOWS.medium,
-  } as ViewStyle,
+  },
   buttonText: {
     color: PROFILE_COLORS.text,
     fontSize: 16,
-    fontWeight: '600' as '600',
+    fontWeight: '600',
     textAlign: 'center',
     paddingVertical: 16,
-  } as TextStyle,
+  },
 };
