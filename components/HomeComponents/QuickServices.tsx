@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import LinearGradient from 'react-native-linear-gradient';
-import { COLORS, SHADOWS } from './theme';
 
 const { width } = Dimensions.get('window');
 
@@ -19,66 +18,88 @@ const QuickServices: React.FC<QuickServicesProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>Quick Services</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.headingText}>Quick Services</Text>
         <TouchableOpacity style={styles.viewAllButton}>
           <Text style={styles.viewAllText}>View All</Text>
+          <Icon name="chevron-right" size={10} color="#8A2BE2" style={{marginLeft: 4}} />
         </TouchableOpacity>
       </View>
       
       <View style={styles.servicesContainer}>
-        {/* Expense Tracker */}
+        {/* Expense Tracker Card */}
         <TouchableOpacity
           style={styles.serviceCard}
           onPress={onExpensesPress}
+          activeOpacity={0.7}
         >
-          <View style={styles.serviceContent}>
-            <View style={[styles.iconContainer, { backgroundColor: 'rgba(244, 67, 54, 0.2)' }]}>
-              <Icon name="wallet" size={20} color={COLORS.error} />
+          <View style={styles.cardContent}>
+            <View style={styles.leftSection}>
+              <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 87, 51, 0.08)' }]}>
+                <Icon name="chart-pie" size={18} color="#FF5733" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.serviceTitle}>Expense Tracker</Text>
+                <Text style={styles.serviceDescription}>Monitor your spending patterns</Text>
+              </View>
             </View>
-            <Text style={styles.serviceTitle}>Expense Tracker</Text>
-            <Text style={styles.serviceDescription}>Track daily expenses and set budgets</Text>
+            <View style={styles.arrowContainer}>
+              <Icon name="long-arrow-alt-right" size={16} color="rgba(255, 255, 255, 0.5)" />
+            </View>
           </View>
-          <LinearGradient
-            colors={['rgba(0,0,0,0)', 'rgba(244, 67, 54, 0.1)']}
-            style={styles.gradientOverlay}
-          />
+          
+          {/* Accent line */}
+          <View style={[styles.accentLine, { backgroundColor: '#FF5733' }]} />
         </TouchableOpacity>
         
-        {/* Goal Savings */}
+        {/* Goal Savings Card */}
         <TouchableOpacity
           style={styles.serviceCard}
           onPress={onGoalSavingsPress}
+          activeOpacity={0.7}
         >
-          <View style={styles.serviceContent}>
-            <View style={[styles.iconContainer, { backgroundColor: 'rgba(76, 175, 80, 0.2)' }]}>
-              <Icon name="bullseye" size={20} color={COLORS.success} />
+          <View style={styles.cardContent}>
+            <View style={styles.leftSection}>
+              <View style={[styles.iconContainer, { backgroundColor: 'rgba(138, 43, 226, 0.08)' }]}>
+                <Icon name="bullseye" size={18} color="#8A2BE2" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.serviceTitle}>Goal Savings</Text>
+                <Text style={styles.serviceDescription}>Track progress toward your goals</Text>
+              </View>
             </View>
-            <Text style={styles.serviceTitle}>Goal Savings</Text>
-            <Text style={styles.serviceDescription}>Create and track your savings goals</Text>
+            <View style={styles.arrowContainer}>
+              <Icon name="long-arrow-alt-right" size={16} color="rgba(255, 255, 255, 0.5)" />
+            </View>
           </View>
-          <LinearGradient
-            colors={['rgba(0,0,0,0)', 'rgba(76, 175, 80, 0.1)']}
-            style={styles.gradientOverlay}
-          />
+          
+          {/* Accent line */}
+          <View style={[styles.accentLine, { backgroundColor: '#8A2BE2' }]} />
         </TouchableOpacity>
         
-        {/* SIP Calculator */}
+        {/* SIP Calculator Card */}
         <TouchableOpacity
           style={styles.serviceCard}
           onPress={onSIPCalculatorPress}
+          activeOpacity={0.7}
         >
-          <View style={styles.serviceContent}>
-            <View style={[styles.iconContainer, { backgroundColor: 'rgba(33, 150, 243, 0.2)' }]}>
-              <Icon name="calculator" size={20} color={COLORS.info} />
+          <View style={styles.cardContent}>
+            <View style={styles.leftSection}>
+              <View style={[styles.iconContainer, { backgroundColor: 'rgba(32, 178, 170, 0.08)' }]}>
+                <Icon name="calculator" size={18} color="#20B2AA" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={styles.serviceTitle}>SIP Calculator</Text>
+                <Text style={styles.serviceDescription}>Plan your investment strategy</Text>
+              </View>
             </View>
-            <Text style={styles.serviceTitle}>SIP Calculator</Text>
-            <Text style={styles.serviceDescription}>Plan your investments with our calculator</Text>
+            <View style={styles.arrowContainer}>
+              <Icon name="long-arrow-alt-right" size={16} color="rgba(255, 255, 255, 0.5)" />
+            </View>
           </View>
-          <LinearGradient
-            colors={['rgba(0,0,0,0)', 'rgba(33, 150, 243, 0.1)']}
-            style={styles.gradientOverlay}
-          />
+          
+          {/* Accent line */}
+          <View style={[styles.accentLine, { backgroundColor: '#20B2AA' }]} />
         </TouchableOpacity>
       </View>
     </View>
@@ -87,75 +108,93 @@ const QuickServices: React.FC<QuickServicesProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 30,
+    marginVertical: 24,
     paddingHorizontal: 16,
   },
-  headerRow: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  sectionTitle: {
+  headingText: {
+    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
+    fontWeight: '700',
   },
   viewAllButton: {
-    padding: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   viewAllText: {
-    fontSize: 14,
-    color: COLORS.primaryLight,
+    color: '#8A2BE2',
+    fontSize: 12,
+    fontWeight: '600',
   },
   servicesContainer: {
     flexDirection: 'column',
-    gap: 12,
+    gap: 14,
   },
   serviceCard: {
     width: '100%',
-    height: 80,
+    height: 76,
     borderRadius: 16,
-    backgroundColor: COLORS.cardDark,
+    backgroundColor: '#0A0A0A',
     overflow: 'hidden',
     position: 'relative',
-    ...SHADOWS.small,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
-  serviceContent: {
+  cardContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    zIndex: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
+  },
+  textContainer: {
+    flexDirection: 'column',
   },
   serviceTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: COLORS.text,
-    width: 110,
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   serviceDescription: {
     fontSize: 12,
-    color: COLORS.textMuted,
-    flex: 1,
-    paddingHorizontal: 8,
+    color: 'rgba(255, 255, 255, 0.6)',
   },
-  gradientOverlay: {
+  arrowContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  accentLine: {
     position: 'absolute',
-    bottom: 0,
+    top: 0,
     left: 0,
-    right: 0,
-    height: 80,
-    zIndex: 1,
-  },
+    width: 3,
+    height: '100%',
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+  }
 });
 
 export default QuickServices;

@@ -1,52 +1,82 @@
-// components/Balance.tsx
 import React from 'react';
 import {View, Text, StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
 import {Shadow} from 'react-native-shadow-2';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/FontAwesome5'; // For icons (FaMoneyBillWave, FaExchangeAlt, FaChartLine)
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const {width} = Dimensions.get('window'); // Get the screen width
-const containerWidth = width * 0.9; // 80% of the screen width
+const {width} = Dimensions.get('window');
+const containerWidth = width * 0.92;
 
 const Balance: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+
   return (
     <View style={styles.container}>
       <Shadow
-        distance={20} // Controls the spread of the shadow
-        startColor="#AA00FF40" // Purple glow with 30% opacity
-        endColor="#AA00FF00" // Fades out the glow
-        offset={[0, 0]} // Centers the glow
+        distance={20}
+        startColor="rgba(170, 0, 255, 0.25)"
+        endColor="rgba(170, 0, 255, 0)"
+        offset={[0, 0]}
         style={[styles.shadowContainer, {width: containerWidth}]}>
+        
+        {/* Main Gradient Container */}
         <LinearGradient
-          colors={['#000000', '#1F1F1F']} // Black to dark gray to black
-          start={{x: 0, y: 0}} // Gradient starts at the top-left
-          end={{x: 1, y: 1}} // Gradient ends at the top-right
+          colors={['#000000', '#1F1F1F']}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 1}}
           style={styles.gradientContainer}>
+
           {/* Inner Glow Effect */}
           <LinearGradient
-            colors={['black', '#8A2BE2']} // Transparent to purple to transparent
+            colors={['black', '#8A2BE2']}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
             style={styles.innerGlow}
           />
+
           <View style={styles.contentContainer}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>Portfolio</Text>
-              <TouchableOpacity style={styles.addMoneyButton}>
-                <Text style={styles.addMoneyButtonText}>View Details</Text>
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>Portfolio Balance</Text>
+                <View style={styles.growthContainer}>
+                  <Icon name="arrow-up" size={10} color="#4CD964" />
+                  <Text style={styles.growthText}>+2.4%</Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.detailsButton}
+                onPress={() => navigation.navigate('PortfolioDetails')}
+              >
+                <Text style={styles.detailsButtonText}>Details</Text>
+                <Icon name="chevron-right" size={10} color="#8A2BE2" style={styles.buttonIcon} />
               </TouchableOpacity>
             </View>
-            
-            <Text style={styles.balance}>₹123.5</Text>
 
+            {/* Balance Section */}
+            <View style={styles.balanceSection}>
+              <Text style={styles.currencySymbol}>₹</Text>
+              <Text style={styles.balance}>123.5</Text>
+            </View>
+
+            {/* Buttons */}
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.button}>
-              <Icon name="bolt" size={16} color="gold" />
-                <Text style={styles.buttonText}>Save</Text>
+              <TouchableOpacity style={styles.primaryButton}>
+                <LinearGradient
+                  colors={['#8A2BE2', '#9932CC']}
+                  start={{x: 0, y: 0}}
+                  end={{x: 1, y: 0}}
+                  style={styles.buttonGradient}>
+                  <Icon name="bolt" size={14} color="gold" />
+                  <Text style={styles.primaryButtonText}>Save</Text>
+                </LinearGradient>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Withdraw</Text>
+
+              <TouchableOpacity style={styles.secondaryButton}>
+                <Icon name="exchange-alt" size={14} color="#FFFFFF" />
+                <Text style={styles.secondaryButtonText}>Withdraw</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -58,19 +88,22 @@ const Balance: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
-    marginBottom: 40,
+    marginTop: 24,
+    marginBottom: 32,
     flex: 1,
-    justifyContent: 'center', // Center vertically
-    alignItems: 'center', // Center horizontally
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   shadowContainer: {
-    borderRadius: 16, // Rounded corners
+    borderRadius: 20,
   },
   gradientContainer: {
-    borderRadius: 16, // Rounded corners
-    padding: 20, // Add padding to the gradient container
-    overflow: 'hidden', // Ensure the inner glow stays within the container
+    borderRadius: 20,
+    padding: 24,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   innerGlow: {
     position: 'absolute',
@@ -78,59 +111,116 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.3, // Adjust glow opacity
+    opacity: 0.3,
   },
   contentContainer: {
     position: 'relative',
-    zIndex: 10, // Ensure content is above the glow
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
+  },
+  titleSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
-    color: '#F2F2F2',
-    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 12,
+  },
+  growthContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76, 217, 100, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  growthText: {
+    color: '#4CD964',
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: 3,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+  },
+  detailsButtonText: {
+    color: '#8A2BE2',
+    fontSize: 12,
     fontWeight: '600',
   },
-  addMoneyButton: {
-    paddingHorizontal: 6,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth:1,
-    borderColor:'#FFFFFF'
+  buttonIcon: {
+    marginLeft: 4,
   },
-  addMoneyButtonText: {
-    color: '#FFFFFF', // Black text
-    fontSize: 8,
-    fontWeight: 'bold',
+  balanceSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  currencySymbol: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '400',
+    marginRight: 4,
+    marginBottom: 4,
   },
   balance: {
     color: '#FFFFFF',
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginTop: 10,
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: "space-evenly",
-    marginTop: 20,
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
-  button: {
+  primaryButton: {
+    width: '48%',
+    height: 46,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    height: '100%',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  secondaryButton: {
+    width: '48%',
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '45%',
-    paddingVertical: 10,
-    borderRadius: 5,
-    borderWidth:1,
-    borderColor:'#FFFFFF'
   },
-  buttonText: {
+  secondaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 14, 
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     marginLeft: 8,
   },
 });

@@ -42,6 +42,7 @@ import BiometricLock from './screens/Account/BiometricLock';
 import HelpAndSupport from './screens/Account/HelpAndSupport';
 import ExpenseAnalysis from './screens/ExpenseAnalysis';
 import BudgetGoals from './screens/BudgetGoals';
+import PortfolioDetails from './screens/PortfolioDetails';
 enableScreens();
 const Stack = createNativeStackNavigator();
 
@@ -68,6 +69,7 @@ const App: React.FC = () => {
             <Stack.Screen name="Question2" component={Question2} options={{ headerShown: false }} />
             <Stack.Screen name="Question3" component={Question3} options={{ headerShown: false }} />
             <Stack.Screen name="Home" component={HomePage} options={{ headerShown: false }} />
+            <Stack.Screen name="PortfolioDetails" component={PortfolioDetails} options={{ headerShown: false }} />
             <Stack.Screen name="DetailsPg" component={Details} options={{ headerShown: false }}/>
             <Stack.Screen name="SmsReq" component={SmsReq} options={{ headerShown: false }} />
             <Stack.Screen name="UPI" component={Upi} options={{ headerShown: false }} />

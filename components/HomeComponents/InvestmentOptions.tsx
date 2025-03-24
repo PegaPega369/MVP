@@ -1,11 +1,33 @@
-import React from 'react';
-import { View, TouchableOpacity, Image, Text, StyleSheet } from 'react-native';
+import React, { useRef } from 'react';
+import { 
+  View, 
+  TouchableOpacity, 
+  Image, 
+  Text, 
+  StyleSheet, 
+  Dimensions, 
+  Platform,
+  Animated 
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { COLORS } from './theme';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+
+const { width } = Dimensions.get('window');
 
 interface InvestmentOptionsProps {
   onGoldPress: () => void;
   onMutualFundPress: () => void;
   onP2PPress: () => void;
+}
+
+interface InvestmentCardProps {
+  title: string;
+  image: any;
+  gradientColors: string[];
+  borderColor: string;
+  glowColor: string;
+  onPress: () => void;
 }
 
 const InvestmentOptions: React.FC<InvestmentOptionsProps> = ({
@@ -14,92 +36,147 @@ const InvestmentOptions: React.FC<InvestmentOptionsProps> = ({
   onP2PPress,
 }) => {
   return (
-    <>
-      <Text style={styles.headings}>Invest Manually</Text>
+    <View style={styles.container}>
+      <Text style={styles.headings}>Investment Options</Text>
 
-      <View style={styles.statsContainer}>
-        {/* Gold Investment Option */}
-        <LinearGradient colors={['#6a0dad', '#000000']} style={styles.gradientBorder}>
-          <TouchableOpacity style={styles.statBox} onPress={onGoldPress}>
-            <Image source={require('../assets/gold.png')} style={styles.image} />
-            <Text style={styles.font}>Gold</Text>
-            {/* <Text style={styles.desc}>
-              Start investing in <Text style={styles.highlight}>Gold</Text> with a minimum of ₹10
-            </Text> */}
-          </TouchableOpacity>
-        </LinearGradient>
+      <View style={styles.cardsContainer}>
+        <InvestmentCard 
+          title="Gold" 
+          image={require('../assets/Gold-bar.png')}
+          gradientColors={['#261A00', '#4A3500', '#6B5000']}
+          borderColor="rgba(255, 215, 0, 0.4)"
+          glowColor="rgba(255, 215, 0, 0.3)"
+          onPress={onGoldPress} 
+        />
 
-        {/* Mutual Funds Investment Option */}
-        <LinearGradient colors={['#000000', '#6a0dad']} style={styles.gradientBorder}>
-          <TouchableOpacity style={styles.statBox} onPress={onMutualFundPress}>
-            <Image source={require('../assets/money.png')} style={styles.image} />
-            <Text style={styles.font}>Silver</Text>
-            {/* <Text style={styles.desc}>
-              Start investing in <Text style={styles.highlight}>Mutual Funds</Text> with a minimum of ₹10
-            </Text> */}
-          </TouchableOpacity>
-        </LinearGradient>
-
-        {/* P2P Investment Option */}
-        <LinearGradient colors={['#6a0dad', '#000000']} style={styles.gradientBorder}>
-          <TouchableOpacity style={styles.statBox} onPress={onP2PPress}>
-            <Image source={require('../assets/P2P.png')} style={styles.image} />
-            <Text style={styles.font}>P2P</Text>
-            {/* <Text style={styles.desc}>
-              Start investing in <Text style={styles.highlight}>P2P</Text> with a minimum of ₹10
-            </Text> */}
-          </TouchableOpacity>
-        </LinearGradient>
+        <InvestmentCard 
+          title="Silver" 
+          image={require('../assets/Silver-Bricks.png')}
+          gradientColors={['#262626', '#404040', '#595959']}
+          borderColor="rgba(192, 192, 192, 0.4)"
+          glowColor="rgba(192, 192, 192, 0.3)"
+          onPress={onP2PPress} 
+        />
+        
+        <InvestmentCard 
+          title="Mutual Funds" 
+          image={require('../assets/MutualFunds.png')}
+          gradientColors={['#0A1A40', '#0F2861', '#1A3980']}
+          borderColor="rgba(100, 149, 237, 0.4)"
+          glowColor="rgba(100, 149, 237, 0.3)"
+          onPress={onMutualFundPress} 
+        />
       </View>
-    </>
+    </View>
   );
 };
 
+const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({ 
+  title, 
+  image,
+  gradientColors, 
+  borderColor,
+  glowColor,
+  onPress 
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.9,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+    onPress();
+  };
+
+  return (
+    <Animated.View style={[styles.cardWrapper, { shadowColor: glowColor, transform: [{ scale: scaleAnim }] }]}> 
+      <LinearGradient 
+        colors={gradientColors}
+        start={{x: 0, y: 0}} 
+        end={{x: 1, y: 1}} 
+        style={[styles.gradientContainer, { borderColor }]}
+      >
+        <TouchableOpacity 
+          style={styles.card} 
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut} 
+          activeOpacity={0.8}
+          accessibilityLabel={`Invest in ${title}`}
+        >
+          <Image source={image} style={styles.image} resizeMode="contain" />
+          <Text style={styles.title}>{title}</Text>
+        </TouchableOpacity>
+      </LinearGradient>
+    </Animated.View>
+  );
+});
+
 const styles = StyleSheet.create({
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
-  gradientBorder: {
-    width: '30%', // Ensure all three fit in one row
-    borderRadius: 12,
-    padding: 2, // Creates a border effect
-  },
-  statBox: {
-    backgroundColor: '#000000', // Dark background inside
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-  },
-  image: {
-    width: 50,
-    height: 50,
-    marginBottom: 6,
-  },
-  font: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  desc: {
-    color: '#ddd',
-    textAlign: 'center',
-    fontSize: 12,
-  },
-  highlight: {
-    fontWeight: 'bold',
-    color: 'gold',
+  container: {
+    marginVertical: 16,
   },
   headings: {
-    color: 'white',
+    color: COLORS.text,
     fontSize: 20,
     fontWeight: '600',
     marginLeft: 20,
     marginBottom: 16,
+    letterSpacing: 0.5,
   },
+  cardsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+  },
+  cardWrapper: {
+    width: width * 0.27,
+    height: 120,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 12,
+      }
+    })
+  },
+  gradientContainer: {
+    borderRadius: 16,
+    height: '100%',
+    borderWidth: 1.5,
+    backgroundColor: '#000000',
+  },
+  card: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+  },
+  image: {
+    width: 50,
+    height: 50,
+    marginBottom: 10,
+  },
+  title: {
+    color: COLORS.text,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  }
 });
 
 export default InvestmentOptions;
