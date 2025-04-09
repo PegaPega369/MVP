@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { enableScreens } from 'react-native-screens';
+
+// 👇 ADD THIS IMPORT
+import { AuthProvider } from './AuthContext'; // adjust path if needed
+
+// All your imports
 import LoginPage from './screens/LoginPage';
 import SmsReq from './components/SmsReq';
 import SplashScreen from './screens/SplashScreen';
@@ -43,6 +48,8 @@ import HelpAndSupport from './screens/Account/HelpAndSupport';
 import ExpenseAnalysis from './screens/ExpenseAnalysis';
 import BudgetGoals from './screens/BudgetGoals';
 import PortfolioDetails from './screens/PortfolioDetails';
+import ReferralPage from './screens/ReferralPage';
+
 enableScreens();
 const Stack = createNativeStackNavigator();
 
@@ -61,49 +68,53 @@ const App: React.FC = () => {
       {isSplash ? (
         <SplashScreen />
       ) : (
-        <NavigationContainer independent={true}>
-          <Stack.Navigator initialRouteName="Login">
-            <Stack.Screen name="Login" component={LoginPage} options={{ headerShown: false }} />
-            <Stack.Screen name="MobileVerification" component={MobileVerification} options={{ headerShown: false }} />
-            <Stack.Screen name="Question1" component={Question1} options={{ headerShown: false }} />
-            <Stack.Screen name="Question2" component={Question2} options={{ headerShown: false }} />
-            <Stack.Screen name="Question3" component={Question3} options={{ headerShown: false }} />
-            <Stack.Screen name="Home" component={HomePage} options={{ headerShown: false }} />
-            <Stack.Screen name="PortfolioDetails" component={PortfolioDetails} options={{ headerShown: false }} />
-            <Stack.Screen name="DetailsPg" component={Details} options={{ headerShown: false }}/>
-            <Stack.Screen name="SmsReq" component={SmsReq} options={{ headerShown: false }} />
-            <Stack.Screen name="UPI" component={Upi} options={{ headerShown: false }} />
-            <Stack.Screen name="Profile" component={ProfilePage} options={{ headerShown: false }} />
-            <Stack.Screen name="Transactions" component={TransactionHistory} options={{ headerShown: false }} />
-            <Stack.Screen name="ExpenseAnalysis" component={ExpenseAnalysis} options={{ headerShown: false }} />
-            <Stack.Screen name="BudgetGoals" component={BudgetGoals} options={{ headerShown: false }} />
-            <Stack.Screen name="Settings" component={Settings} options={{ headerShown: false }} />
-            <Stack.Screen name="RoundOff" component={RoundupSavings} options={{ headerShown: false }} />
-            <Stack.Screen name="DailySavings" component={DailySavings} options={{ headerShown: false }} />
-            <Stack.Screen name="WeeklySavings" component={WeeklySavings} options={{ headerShown: false }} />
-            <Stack.Screen name="MonthlySavings" component={MonthlySavings} options={{ headerShown: false }} />
-            <Stack.Screen name="Gold" component={DigitalGold} options={{ headerShown: false }} />
-            <Stack.Screen name="MutualFund" component={MutualFund} options={{ headerShown: false }} />
-            <Stack.Screen name="MutualFund1" component={MutualFund1Screen} options={{ headerShown: false }} />
-            <Stack.Screen name="MutualFund2" component={MutualFund2Screen} options={{ headerShown: false }} />
-            <Stack.Screen name="MutualFund3" component={MutualFund3Screen} options={{ headerShown: false }} />
-            <Stack.Screen name="Expenses" component={ExpenseTracker} options={{ headerShown: false }} />
-            <Stack.Screen name="GoalSavings1" component={GoalPage1} options={{ headerShown: false }} />
-            <Stack.Screen name="GoalSavings2" component={GoalPage2} options={{ headerShown: false }} />
-            <Stack.Screen name="GoalSavings3" component={GoldPage3} options={{ headerShown: false }} />
-            <Stack.Screen name="GoalSavings4" component={GoalPage4} options={{ headerShown: false }} />
-            <Stack.Screen name="SIP" component={SIPCalculator} options={{ headerShown: false }} />
-            <Stack.Screen name="ID" component={InvestmentDetail} options={{ headerShown: false }} />
-            <Stack.Screen name="AccountDetails" component={AccountDetails} options={{ headerShown: false }} />
-            <Stack.Screen name="IdentityVerification" component={IdentityVerification} options={{ headerShown: false }} />
-            <Stack.Screen name="PaymentMethods" component={PaymentMethods} options={{ headerShown: false }} />
-            <Stack.Screen name="SetupAutopay" component={SetupAutopay} options={{ headerShown: false }} />
-            <Stack.Screen name="SaveOnEverySpend" component={SaveOnEverySpend} options={{ headerShown: false }} />
-            <Stack.Screen name="Permissions" component={Permissions} options={{ headerShown: false }} />
-            <Stack.Screen name="BiometricLock" component={BiometricLock} options={{ headerShown: false }} />
-            <Stack.Screen name="HelpAndSupport" component={HelpAndSupport} options={{ headerShown: false }} />
-          </Stack.Navigator>
-        </NavigationContainer>
+        // ✅ Wrap navigation with AuthProvider
+        <AuthProvider>
+          <NavigationContainer independent={true}>
+            <Stack.Navigator initialRouteName="Login">
+              <Stack.Screen name="Login" component={LoginPage} options={{ headerShown: false }} />
+              <Stack.Screen name="MobileVerification" component={MobileVerification} options={{ headerShown: false }} />
+              <Stack.Screen name="Question1" component={Question1} options={{ headerShown: false }} />
+              <Stack.Screen name="Question2" component={Question2} options={{ headerShown: false }} />
+              <Stack.Screen name="Question3" component={Question3} options={{ headerShown: false }} />
+              <Stack.Screen name="Home" component={HomePage} options={{ headerShown: false }} />
+              <Stack.Screen name="PortfolioDetails" component={PortfolioDetails} options={{ headerShown: false }} />
+              <Stack.Screen name="DetailsPg" component={Details} options={{ headerShown: false }}/>
+              <Stack.Screen name="SmsReq" component={SmsReq} options={{ headerShown: false }} />
+              <Stack.Screen name="UPI" component={Upi} options={{ headerShown: false }} />
+              <Stack.Screen name="Profile" component={ProfilePage} options={{ headerShown: false }} />
+              <Stack.Screen name="Transactions" component={TransactionHistory} options={{ headerShown: false }} />
+              <Stack.Screen name="ExpenseAnalysis" component={ExpenseAnalysis} options={{ headerShown: false }} />
+              <Stack.Screen name="BudgetGoals" component={BudgetGoals} options={{ headerShown: false }} />
+              <Stack.Screen name="Settings" component={Settings} options={{ headerShown: false }} />
+              <Stack.Screen name="RoundOff" component={RoundupSavings} options={{ headerShown: false }} />
+              <Stack.Screen name="DailySavings" component={DailySavings} options={{ headerShown: false }} />
+              <Stack.Screen name="WeeklySavings" component={WeeklySavings} options={{ headerShown: false }} />
+              <Stack.Screen name="MonthlySavings" component={MonthlySavings} options={{ headerShown: false }} />
+              <Stack.Screen name="Gold" component={DigitalGold} options={{ headerShown: false }} />
+              <Stack.Screen name="MutualFund" component={MutualFund} options={{ headerShown: false }} />
+              <Stack.Screen name="MutualFund1" component={MutualFund1Screen} options={{ headerShown: false }} />
+              <Stack.Screen name="MutualFund2" component={MutualFund2Screen} options={{ headerShown: false }} />
+              <Stack.Screen name="MutualFund3" component={MutualFund3Screen} options={{ headerShown: false }} />
+              <Stack.Screen name="Expenses" component={ExpenseTracker} options={{ headerShown: false }} />
+              <Stack.Screen name="GoalSavings1" component={GoalPage1} options={{ headerShown: false }} />
+              <Stack.Screen name="GoalSavings2" component={GoalPage2} options={{ headerShown: false }} />
+              <Stack.Screen name="GoalSavings3" component={GoldPage3} options={{ headerShown: false }} />
+              <Stack.Screen name="GoalSavings4" component={GoalPage4} options={{ headerShown: false }} />
+              <Stack.Screen name="SIP" component={SIPCalculator} options={{ headerShown: false }} />
+              <Stack.Screen name="ID" component={InvestmentDetail} options={{ headerShown: false }} />
+              <Stack.Screen name="AccountDetails" component={AccountDetails} options={{ headerShown: false }} />
+              <Stack.Screen name="IdentityVerification" component={IdentityVerification} options={{ headerShown: false }} />
+              <Stack.Screen name="PaymentMethods" component={PaymentMethods} options={{ headerShown: false }} />
+              <Stack.Screen name="SetupAutopay" component={SetupAutopay} options={{ headerShown: false }} />
+              <Stack.Screen name="SaveOnEverySpend" component={SaveOnEverySpend} options={{ headerShown: false }} />
+              <Stack.Screen name="Permissions" component={Permissions} options={{ headerShown: false }} />
+              <Stack.Screen name="BiometricLock" component={BiometricLock} options={{ headerShown: false }} />
+              <Stack.Screen name="HelpAndSupport" component={HelpAndSupport} options={{ headerShown: false }} />
+              <Stack.Screen name="ReferralPage" component={ReferralPage} options={{ headerShown: false }} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </AuthProvider>
       )}
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,55 +7,147 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
-  Dimensions
+  Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import { PROFILE_COLORS, PROFILE_STYLES } from '../../components/ProfileComponents/theme';
+import firestore from '@react-native-firebase/firestore';
 
 const { width } = Dimensions.get('window');
 
+// Define interfaces for TypeScript
+interface RouteParams {
+  uid: string;
+}
+
+interface UserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  address: string;
+  pincode: string;
+  [key: string]: string; // Index signature for dynamic field access
+}
+
+interface CustomInputProps {
+  label: string;
+  value: string;
+  onChangeText: (field: string, value: string) => void;
+  field: string;
+  editable?: boolean;
+  keyboardType?: 'default' | 'number-pad' | 'email-address' | 'phone-pad';
+}
+
 const AccountDetails: React.FC = () => {
   const route = useRoute();
-  const { uid } = route.params || { uid: 'defaultUser' };
+  const params = route.params as RouteParams;
+  const uid = params?.uid || 'defaultUser';
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   // Animation for the save button
-  const [buttonScale] = useState(new Animated.Value(1));
+  const [buttonScale] = useState<Animated.Value>(new Animated.Value(1));
 
-  // Form state
-  const [formData, setFormData] = useState({
-    firstName: 'Dhanala',
+  // Loading and error states
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Form state with initial empty values
+  const [formData, setFormData] = useState<UserData>({
+    firstName: '',
     lastName: '',
-    email: 'dhanala@example.com',
-    phone: '+91 8919157347',
-    dateOfBirth: '15/05/2003',
-    address: '123 Main Street, Hyderabad',
-    pincode: '500001',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    address: '',
+    pincode: '',
   });
 
   // Editable state tracking
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const handleInputChange = (field, value) => {
+  // Fetch user data from Firebase
+  useEffect(() => {
+    const fetchUserData = async (): Promise<void> => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const userDoc = await firestore().collection('users').doc(uid).get();
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data() as Partial<UserData>;
+          
+          // Update form data with fetched values, keeping default values for missing fields
+          setFormData({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            dateOfBirth: userData.dateOfBirth || '',
+            address: userData.address || '',
+            pincode: userData.pincode || '',
+          });
+        } else {
+          setError('User data not found');
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError('Failed to load user data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [uid]);
+
+  // Save user data to Firebase
+  const saveUserData = async (): Promise<void> => {
+    setSaving(true);
+    
+    try {
+      await firestore().collection('users').doc(uid).update({
+        ...formData,
+        updatedAt: firestore.FieldValue.serverTimestamp(),
+      });
+      
+      Alert.alert('Success', 'Your profile has been updated successfully.');
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error saving user data:', err);
+      Alert.alert('Error', 'Failed to save changes. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string): void => {
+    // Using a function approach for state updates to ensure we don't lose focus
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const toggleEditMode = () => {
-    setIsEditing(!isEditing);
-    // If we're saving changes, we would implement API call here
+  const toggleEditMode = (): void => {
     if (isEditing) {
-      // Save changes logic
-      console.log('Saving user data:', formData);
+      // If we're currently editing, save changes
+      saveUserData();
+    } else {
+      // Otherwise, enter edit mode
+      setIsEditing(true);
     }
   };
 
-  const handlePressIn = () => {
+  const handlePressIn = (): void => {
     Animated.spring(buttonScale, {
       toValue: 0.96,
       friction: 5,
@@ -64,7 +156,7 @@ const AccountDetails: React.FC = () => {
     }).start();
   };
 
-  const handlePressOut = () => {
+  const handlePressOut = (): void => {
     Animated.spring(buttonScale, {
       toValue: 1,
       friction: 3,
@@ -74,21 +166,98 @@ const AccountDetails: React.FC = () => {
   };
 
   // Custom Input component
-  const CustomInput = ({ label, value, onChangeText, field, editable = true }) => (
-    <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        style={[
-          styles.input,
-          !isEditing && styles.inputDisabled
-        ]}
-        value={value}
-        onChangeText={(text) => onChangeText(field, text)}
-        editable={isEditing && editable}
-        placeholderTextColor={PROFILE_COLORS.textMuted}
-      />
-    </View>
-  );
+  const CustomInput: React.FC<CustomInputProps> = ({ 
+    label, 
+    value, 
+    onChangeText, 
+    field, 
+    editable = true,
+    keyboardType = 'default' 
+  }) => {
+    // Using ref to prevent keyboard dismissal
+    const inputRef = React.useRef<TextInput>(null);
+    
+    return (
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>{label}</Text>
+        <TextInput
+          ref={inputRef}
+          style={[
+            styles.input,
+            !isEditing && styles.inputDisabled
+          ]}
+          value={value}
+          onChangeText={(text) => onChangeText(field, text)}
+          editable={isEditing && editable}
+          placeholderTextColor={PROFILE_COLORS.textMuted}
+          keyboardType={keyboardType}
+          blurOnSubmit={false}
+        />
+      </View>
+    );
+  };
+
+  // Show loading indicator while fetching data
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <LinearGradient
+          colors={PROFILE_COLORS.darkPurpleGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Icon name="arrow-back" size={24} color={PROFILE_COLORS.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Account Details</Text>
+          <View style={styles.backButton} />
+        </LinearGradient>
+        
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="large" color={PROFILE_COLORS.primary} />
+          <Text style={styles.loadingText}>Loading your account details...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Show error message if there's an error
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={PROFILE_COLORS.darkPurpleGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Icon name="arrow-back" size={24} color={PROFILE_COLORS.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Account Details</Text>
+          <View style={styles.backButton} />
+        </LinearGradient>
+        
+        <View style={styles.errorContainer}>
+          <Icon name="alert-circle" size={60} color={PROFILE_COLORS.error} />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => navigation.replace('AccountDetails', { uid })}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -109,12 +278,17 @@ const AccountDetails: React.FC = () => {
         <TouchableOpacity 
           style={styles.editButton}
           onPress={toggleEditMode}
+          disabled={saving}
         >
-          <Icon 
-            name={isEditing ? "save-outline" : "create-outline"} 
-            size={24} 
-            color={PROFILE_COLORS.primaryLight} 
-          />
+          {saving ? (
+            <ActivityIndicator size="small" color={PROFILE_COLORS.primaryLight} />
+          ) : (
+            <Icon 
+              name={isEditing ? "save-outline" : "create-outline"} 
+              size={24} 
+              color={PROFILE_COLORS.primaryLight} 
+            />
+          )}
         </TouchableOpacity>
       </LinearGradient>
 
@@ -153,14 +327,16 @@ const AccountDetails: React.FC = () => {
             label="Email" 
             value={formData.email} 
             onChangeText={handleInputChange} 
-            field="email" 
+            field="email"
+            keyboardType="email-address" 
           />
           
           <CustomInput 
             label="Phone Number" 
             value={formData.phone} 
             onChangeText={handleInputChange} 
-            field="phone" 
+            field="phone"
+            keyboardType="phone-pad"
           />
         </View>
 
@@ -179,7 +355,8 @@ const AccountDetails: React.FC = () => {
             label="Pincode" 
             value={formData.pincode} 
             onChangeText={handleInputChange} 
-            field="pincode" 
+            field="pincode"
+            keyboardType="number-pad" 
           />
         </View>
 
@@ -187,9 +364,10 @@ const AccountDetails: React.FC = () => {
         {isEditing && (
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={toggleEditMode}
+            onPress={saveUserData}
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
+            disabled={saving}
           >
             <Animated.View style={[
               styles.saveButton,
@@ -201,7 +379,11 @@ const AccountDetails: React.FC = () => {
                 end={{ x: 1, y: 1 }}
                 style={styles.saveButtonGradient}
               >
-                <Text style={styles.saveButtonText}>Save Changes</Text>
+                {saving ? (
+                  <ActivityIndicator size="small" color={PROFILE_COLORS.text} />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
               </LinearGradient>
             </Animated.View>
           </TouchableOpacity>
@@ -299,6 +481,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   saveButtonText: {
+    color: PROFILE_COLORS.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Loading styles
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: PROFILE_COLORS.background,
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: PROFILE_COLORS.text,
+    textAlign: 'center',
+  },
+  // Error styles
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: PROFILE_COLORS.text,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: PROFILE_COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  retryButtonText: {
     color: PROFILE_COLORS.text,
     fontSize: 16,
     fontWeight: '600',

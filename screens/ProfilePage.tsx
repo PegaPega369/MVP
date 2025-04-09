@@ -1,30 +1,45 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  ScrollView, 
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
   Switch,
   Animated,
-  Platform,
   SafeAreaView,
-  ViewStyle,
-  TextStyle,
-  ImageStyle
+  ActivityIndicator,
 } from 'react-native';
 import Navbar from '../components/Navbar';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { PROFILE_COLORS,SHADOWS,COLORS} from '../components/ProfileComponents/theme';
+import {
+  PROFILE_COLORS,
+  SHADOWS,
+  COLORS,
+} from '../components/ProfileComponents/theme';
 import ProfileHeader from '../components/ProfileComponents/ProfileHeader';
 import ProfileOption from '../components/ProfileComponents/ProfileOption';
-import ProfileSection from '../components/ProfileComponents/ProfileSection'
+import ProfileSection from '../components/ProfileComponents/ProfileSection';
 
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Define TypeScript interfaces
 interface RouteParams {
   uid: string;
+}
+
+interface UserData {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  age?: number;
+  createdAt?: firestore.Timestamp;
 }
 
 const ProfilePage: React.FC = () => {
@@ -33,17 +48,71 @@ const ProfilePage: React.FC = () => {
   const uid = params?.uid || 'defaultUser';
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
-  const [isPaused, setIsPaused] = useState(false);
-  const [isDeactivated, setIsDeactivated] = useState(false);
+  // State variables for user data
+  const [userData, setUserData] = useState<UserData>({
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+  });
+  const [joinedDate, setJoinedDate] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Account status state
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isDeactivated, setIsDeactivated] = useState<boolean>(false);
 
   // Animation values for button presses
-  const [buttonScale] = useState(new Animated.Value(1));
-  const [optionScale] = useState(new Animated.Value(1));
+  const [buttonScale] = useState<Animated.Value>(new Animated.Value(1));
+  const [optionScale] = useState<Animated.Value>(new Animated.Value(1));
 
-  const togglePauseAccount = () => setIsPaused(previousState => !previousState);
-  const toggleDeactivateAccount = () => setIsDeactivated(previousState => !previousState);
+  const togglePauseAccount = (): void => setIsPaused(previousState => !previousState);
+  const toggleDeactivateAccount = (): void =>
+    setIsDeactivated(previousState => !previousState);
 
-  const handlePressIn = () => {
+  useEffect(() => {
+    const fetchUserData = async (): Promise<void> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const userDoc = await firestore().collection('users').doc(uid).get();
+        if (userDoc.exists) {
+          const firestoreData = userDoc.data() as UserData | undefined;
+          
+          if (firestoreData) {
+            // Set user information from Firestore
+            setUserData({
+              firstName: firestoreData.firstName || '',
+              lastName: firestoreData.lastName || '',
+              phoneNumber: firestoreData.phoneNumber || '',
+              age: firestoreData.age,
+            });
+            
+            // Format the joined date if available
+            if (firestoreData.createdAt) {
+              const joinDate = firestoreData.createdAt.toDate();
+              const month = joinDate.toLocaleString('default', { month: 'short' });
+              const year = joinDate.getFullYear();
+              setJoinedDate(`${month} ${year}`);
+            } else {
+              setJoinedDate('N/A');
+            }
+          }
+        } else {
+          setError('User data not found');
+        }
+      } catch (error) {
+        console.log('Error fetching user data: ', error);
+        setError('Error loading profile data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [uid]);
+
+  const handlePressIn = (): void => {
     Animated.spring(buttonScale, {
       toValue: 0.96,
       friction: 5,
@@ -52,7 +121,7 @@ const ProfilePage: React.FC = () => {
     }).start();
   };
 
-  const handlePressOut = () => {
+  const handlePressOut = (): void => {
     Animated.spring(buttonScale, {
       toValue: 1,
       friction: 3,
@@ -61,19 +130,66 @@ const ProfilePage: React.FC = () => {
     }).start();
   };
 
+  const removeToken = async (): Promise<void> => {
+    try {
+      await AsyncStorage.removeItem('userToken');
+      console.log('Token removed successfully');
+    } catch (error) {
+      console.error('Error removing token: ', error);
+    }
+  };
+  
+  const handleSignOut = async (): Promise<void> => {
+    try {
+      await removeToken(); // Call the removeToken function before signing out
+      await auth().signOut();
+      // Navigate to login screen or any other appropriate screen after sign out
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      });
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
+  };
+  
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={PROFILE_COLORS.primary} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <Icon name="alert-circle" size={50} color={PROFILE_COLORS.error} />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => navigation.replace('Profile', {uid})}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.background}>
-      <ScrollView 
-        style={styles.container} 
+      <ScrollView
+        style={styles.container}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Header */}
-        <ProfileHeader 
-          firstName="Dhanala"
-          phoneNumber="+91 8919157347"
-          age={21}
-          joinedDate="Nov 2023"
+        showsVerticalScrollIndicator={false}>
+        {/* Profile Header - Now with dynamic data */}
+        <ProfileHeader
+          firstName={userData.firstName}
+          lastName={userData.lastName}
+          phoneNumber={userData.phoneNumber || 'No phone number'}
+          age={userData.age || 0}
+          joinedDate={joinedDate}
         />
 
         {/* Profile Settings Section */}
@@ -81,14 +197,14 @@ const ProfilePage: React.FC = () => {
           <ProfileOption
             icon="person-circle"
             label="Account Details"
-            onPress={() => navigation.navigate('AccountDetails', { uid })}
+            onPress={() => navigation.navigate('AccountDetails', {uid})}
             scale={optionScale}
             isFirst
           />
           <ProfileOption
             icon="shield-checkmark"
             label="Identity Verification"
-            onPress={() => navigation.navigate('IdentityVerification', { uid })}
+            onPress={() => navigation.navigate('IdentityVerification', {uid})}
             rightElement={<Text style={styles.linkText}>Verify Now</Text>}
             scale={optionScale}
             isLast
@@ -100,20 +216,20 @@ const ProfilePage: React.FC = () => {
           <ProfileOption
             icon="card"
             label="Payment Methods"
-            onPress={() => navigation.navigate('PaymentMethods', { uid })}
+            onPress={() => navigation.navigate('PaymentMethods', {uid})}
             scale={optionScale}
             isFirst
           />
           <ProfileOption
             icon="repeat"
             label="Setup Autopay"
-            onPress={() => navigation.navigate('SetupAutopay', { uid })}
+            onPress={() => navigation.navigate('SetupAutopay', {uid})}
             scale={optionScale}
           />
           <ProfileOption
             icon="pricetag"
             label="Save on Every Spend"
-            onPress={() => navigation.navigate('SaveOnEverySpend', { uid })}
+            onPress={() => navigation.navigate('SaveOnEverySpend', {uid})}
             scale={optionScale}
             isLast
           />
@@ -124,14 +240,14 @@ const ProfilePage: React.FC = () => {
           <ProfileOption
             icon="lock-closed"
             label="Permissions"
-            onPress={() => navigation.navigate('Permissions', { uid })}
+            onPress={() => navigation.navigate('Permissions', {uid})}
             scale={optionScale}
             isFirst
           />
           <ProfileOption
             icon="finger-print"
             label="Biometric Lock"
-            onPress={() => navigation.navigate('BiometricLock', { uid })}
+            onPress={() => navigation.navigate('BiometricLock', {uid})}
             scale={optionScale}
             isLast
           />
@@ -142,7 +258,7 @@ const ProfilePage: React.FC = () => {
           <ProfileOption
             icon="help-circle"
             label="Help and Support"
-            onPress={() => navigation.navigate('HelpAndSupport', { uid })}
+            onPress={() => navigation.navigate('HelpAndSupport', {uid})}
             scale={optionScale}
             isFirst
             isLast
@@ -154,13 +270,28 @@ const ProfilePage: React.FC = () => {
           <View style={styles.switchOption}>
             <View style={styles.optionLeft}>
               <View style={styles.iconContainer}>
-                <Icon name="pause-circle" size={20} color={isPaused ? PROFILE_COLORS.warning : PROFILE_COLORS.primaryLight} />
+                <Icon
+                  name="pause-circle"
+                  size={20}
+                  color={
+                    isPaused
+                      ? PROFILE_COLORS.warning
+                      : PROFILE_COLORS.primaryLight
+                  }
+                />
               </View>
               <Text style={styles.optionText}>Pause Account</Text>
             </View>
             <Switch
-              trackColor={{ false: PROFILE_COLORS.switchTrackInactive, true: PROFILE_COLORS.switchTrackActive }}
-              thumbColor={isPaused ? PROFILE_COLORS.warning : PROFILE_COLORS.switchThumbInactive}
+              trackColor={{
+                false: PROFILE_COLORS.switchTrackInactive,
+                true: PROFILE_COLORS.switchTrackActive,
+              }}
+              thumbColor={
+                isPaused
+                  ? PROFILE_COLORS.warning
+                  : PROFILE_COLORS.switchThumbInactive
+              }
               ios_backgroundColor={PROFILE_COLORS.cardLight}
               onValueChange={togglePauseAccount}
               value={isPaused}
@@ -170,13 +301,28 @@ const ProfilePage: React.FC = () => {
           <View style={styles.switchOption}>
             <View style={styles.optionLeft}>
               <View style={styles.iconContainer}>
-                <Icon name="close-circle" size={20} color={isDeactivated ? PROFILE_COLORS.error : PROFILE_COLORS.primaryLight} />
+                <Icon
+                  name="close-circle"
+                  size={20}
+                  color={
+                    isDeactivated
+                      ? PROFILE_COLORS.error
+                      : PROFILE_COLORS.primaryLight
+                  }
+                />
               </View>
               <Text style={styles.optionText}>Deactivate Account</Text>
             </View>
             <Switch
-              trackColor={{ false: PROFILE_COLORS.switchTrackInactive, true: PROFILE_COLORS.dangerBackground }}
-              thumbColor={isDeactivated ? PROFILE_COLORS.error : PROFILE_COLORS.switchThumbInactive}
+              trackColor={{
+                false: PROFILE_COLORS.switchTrackInactive,
+                true: PROFILE_COLORS.dangerBackground,
+              }}
+              thumbColor={
+                isDeactivated
+                  ? PROFILE_COLORS.error
+                  : PROFILE_COLORS.switchThumbInactive
+              }
               ios_backgroundColor={PROFILE_COLORS.cardLight}
               onValueChange={toggleDeactivateAccount}
               value={isDeactivated}
@@ -185,24 +331,18 @@ const ProfilePage: React.FC = () => {
         </View>
 
         {/* Sign Out button with animation */}
-        <TouchableOpacity 
-          onPress={() => {
-            /* Handle sign out logic here */
-          }}
+        <TouchableOpacity
+          onPress={handleSignOut}
           activeOpacity={0.9}
           onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-        >
-          <Animated.View style={[
-            styles.signOutButton,
-            { transform: [{ scale: buttonScale }] }
-          ]}>
+          onPressOut={handlePressOut}>
+          <Animated.View
+            style={[styles.signOutButton, {transform: [{scale: buttonScale}]}]}>
             <LinearGradient
               colors={['#231537', '#4B0082']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.signOutGradient}
-            >
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.signOutGradient}>
               <Text style={styles.signOutText}>Sign Out</Text>
             </LinearGradient>
           </Animated.View>
@@ -214,6 +354,29 @@ const ProfilePage: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+// Define styles with TypeScript interfaces
+interface StyleProps {
+  background: object;
+  container: object;
+  scrollContent: object;
+  linkText: object;
+  accountControls: object;
+  switchOption: object;
+  optionLeft: object;
+  iconContainer: object;
+  optionText: object;
+  signOutButton: object;
+  signOutGradient: object;
+  signOutText: object;
+  appVersion: object;
+  loadingContainer: object;
+  loadingText: object;
+  errorContainer: object;
+  errorText: object;
+  retryButton: object;
+  retryButtonText: object;
+}
 
 const styles = StyleSheet.create({
   background: {
@@ -291,6 +454,44 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     marginBottom: 20,
+  },
+  // Loading state styles
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  // Error state styles
+  errorContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: PROFILE_COLORS.primary,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

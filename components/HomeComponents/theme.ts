@@ -21,6 +21,8 @@ export const COLORS = {
     
     cardDark: '#0A0A0A',
     cardLight: '#151515',
+
+    white: '#FFFFFF',
     
     // Gradients (array of colors)
     purpleGradient: ['#231537', '#4B0082'],

@@ -1,67 +1,69 @@
+// components/Balance.tsx
 import React from 'react';
-import {View, Text, StyleSheet, Dimensions, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import {Shadow} from 'react-native-shadow-2';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/FontAwesome5';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/FontAwesome5'; // For icons (FaMoneyBillWave, FaExchangeAlt, FaChartLine)
+import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-const {width} = Dimensions.get('window');
-const containerWidth = width * 0.92;
+const {width} = Dimensions.get('window'); // Get the screen width
+const containerWidth = width * 0.9; // 80% of the screen width
 
-const Balance: React.FC = () => {
+
+interface BalanceProps {
+  onDetailsPress: () => void;
+}
+
+const Balance: React.FC<BalanceProps> = ({onDetailsPress}) => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
-
   return (
     <View style={styles.container}>
       <Shadow
         distance={20}
-        startColor="rgba(170, 0, 255, 0.25)"
-        endColor="rgba(170, 0, 255, 0)"
+        startColor="#AA00FF40"
+        endColor="#AA00FF00"
         offset={[0, 0]}
         style={[styles.shadowContainer, {width: containerWidth}]}>
-        
-        {/* Main Gradient Container */}
         <LinearGradient
           colors={['#000000', '#1F1F1F']}
           start={{x: 0, y: 0}}
           end={{x: 1, y: 1}}
           style={styles.gradientContainer}>
-
-          {/* Inner Glow Effect */}
           <LinearGradient
             colors={['black', '#8A2BE2']}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
             style={styles.innerGlow}
           />
-
           <View style={styles.contentContainer}>
-            {/* Header */}
             <View style={styles.header}>
               <View style={styles.titleSection}>
-                <Text style={styles.title}>Portfolio Balance</Text>
+                <Text style={styles.title}>Portfolio</Text>
                 <View style={styles.growthContainer}>
                   <Icon name="arrow-up" size={10} color="#4CD964" />
                   <Text style={styles.growthText}>+2.4%</Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.detailsButton}
-                onPress={() => navigation.navigate('PortfolioDetails')}
-              >
+                onPress={onDetailsPress}>
                 <Text style={styles.detailsButtonText}>Details</Text>
-                <Icon name="chevron-right" size={10} color="#8A2BE2" style={styles.buttonIcon} />
+                <Icon
+                  name="chevron-right"
+                  size={10}
+                  color="#ffffff"
+                  style={styles.buttonIcon}
+                />
               </TouchableOpacity>
             </View>
-
-            {/* Balance Section */}
-            <View style={styles.balanceSection}>
-              <Text style={styles.currencySymbol}>₹</Text>
-              <Text style={styles.balance}>123.5</Text>
-            </View>
-
-            {/* Buttons */}
+            <Text style={styles.balance}>₹123.5</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.primaryButton}>
                 <LinearGradient
@@ -88,22 +90,19 @@ const Balance: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 24,
-    marginBottom: 32,
+    marginTop: 20,
+    marginBottom: 40,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   shadowContainer: {
-    borderRadius: 20,
+    borderRadius: 16,
   },
   gradientContainer: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 20,
     overflow: 'hidden',
-    position: 'relative',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   innerGlow: {
     position: 'absolute',
@@ -121,17 +120,50 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
   },
   titleSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   title: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 16,
+    color: '#F2F2F2',
+    fontSize: 18,
     fontWeight: '600',
-    marginRight: 12,
+    marginRight: 10,
+  },
+  addMoneyButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  addMoneyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: 'bold',
+  },
+  balance: {
+    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  detailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+  },
+  detailsButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  buttonIcon: {
+    marginLeft: 4,
   },
   growthContainer: {
     flexDirection: 'row',
@@ -147,45 +179,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 3,
   },
-  detailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: 'rgba(138, 43, 226, 0.1)',
-  },
-  detailsButtonText: {
-    color: '#8A2BE2',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  buttonIcon: {
-    marginLeft: 4,
-  },
-  balanceSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  currencySymbol: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '400',
-    marginRight: 4,
-    marginBottom: 4,
-  },
-  balance: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 20,
   },
   primaryButton: {
     width: '48%',

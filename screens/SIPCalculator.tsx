@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,9 @@ import {
   StyleSheet,
   ScrollView,
   Dimensions,
-  Animated,
   StatusBar,
+  Animated,
+  Platform,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -17,6 +18,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { PieChart } from 'react-native-chart-kit';
 import { COLORS, SHADOWS } from '../components/ProfileComponents/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface RouteParams {
   uid: string;
@@ -42,13 +45,49 @@ const SIPCalculator: React.FC = () => {
   
   // Step-by-step calculation visibility
   const [showSteps, setShowSteps] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("SIP");
   
   // Animation values
-  const fadeAnim = useState(new Animated.Value(1))[0];
-  const scaleAnim = useState(new Animated.Value(1))[0];
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
   
+  // Shimmer effect
+  const shimmerValue = useRef(new Animated.Value(0)).current;
+  const shimmerPosition = shimmerValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-350, SCREEN_WIDTH + 350]
+  });
+
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
+    
+    // Start animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    // Shimmer animation loop
+    const runShimmer = () => {
+      shimmerValue.setValue(0);
+      Animated.timing(shimmerValue, {
+        toValue: 1,
+        duration: 3500, // Slower shimmer animation
+        useNativeDriver: false,
+      }).start(() => {
+        setTimeout(runShimmer, 2000); // Longer pause between animations
+      });
+    };
+    
+    runShimmer();
   }, []);
   
   // Calculation functions with precise math
@@ -125,27 +164,6 @@ const SIPCalculator: React.FC = () => {
     return num.toLocaleString('en-IN');
   };
   
-  // Handle animation when recalculating
-  const animateResult = () => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.05,
-        duration: 200,
-        useNativeDriver: true
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true
-      })
-    ]).start();
-  };
-  
-  // Recalculate on any input change
-  useEffect(() => {
-    animateResult();
-  }, [monthlyInvestment, returnRate, timePeriod]);
-  
   const { investedAmount, estimatedReturns, totalValue, cagr } = calculateSIP();
   const steps = generateSteps();
   
@@ -177,72 +195,118 @@ const SIPCalculator: React.FC = () => {
     decimalPlaces: 0,
   };
   
+  // Calculate inflation-adjusted value
+  const calculateInflationAdjustedValue = () => {
+    const inflationRate = 6; // Default inflation rate (India average)
+    const years = parseFloat(timePeriod) || 10;
+    const futureValue = totalValue;
+    
+    // Inflation adjustment formula: PV = FV / (1 + inflation)^years
+    const inflationAdjustedValue = futureValue / Math.pow(1 + (inflationRate / 100), years);
+    
+    return Math.round(inflationAdjustedValue);
+  };
+  
+  const inflationAdjustedValue = calculateInflationAdjustedValue();
+  
   return (
     <View style={styles.background}>
+      <StatusBar barStyle="light-content" backgroundColor="#000000" />
+      
+      {/* Removed decorative background circles */}
+      
       <ScrollView 
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Icon name="arrow-left" size={24} color={COLORS.text} />
-          </TouchableOpacity>
+        {/* Header with Animated Content */}
+        <Animated.View
+          style={[
+            styles.headerContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Icon name="arrow-left" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.infoButton}
+              onPress={() => setShowSteps(!showSteps)}
+            >
+              <Icon 
+                name={showSteps ? "calculator-off" : "calculator"} 
+                size={22} 
+                color="#C9A1FF"
+              />
+            </TouchableOpacity>
+          </View>
           
-          <Text style={styles.headerText}>SIP Calculator</Text>
+          <Text style={styles.headerTitle}>Investment Calculator</Text>
+          <Text style={styles.headerSubtitle}>Plan your wealth creation journey</Text>
           
-          <TouchableOpacity
-            style={styles.infoButton}
-            onPress={() => setShowSteps(!showSteps)}
-          >
-            <Icon 
-              name={showSteps ? "calculator-off" : "calculator"} 
-              size={24} 
-              color={COLORS.primary}
-            />
-          </TouchableOpacity>
-        </View>
+          {/* Calculator Type Tabs */}
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'SIP' && styles.activeTab]}
+              onPress={() => setActiveTab('SIP')}
+            >
+              <Text style={[styles.tabText, activeTab === 'SIP' && styles.activeTabText]}>
+                SIP
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'Lumpsum' && styles.activeTab]}
+              onPress={() => setActiveTab('Lumpsum')}
+            >
+              <Text style={[styles.tabText, activeTab === 'Lumpsum' && styles.activeTabText]}>
+                Lumpsum
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'Goal' && styles.activeTab]}
+              onPress={() => setActiveTab('Goal')}
+            >
+              <Text style={[styles.tabText, activeTab === 'Goal' && styles.activeTabText]}>
+                Goal
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
         
         {/* Form Inputs */}
-        <View style={styles.formContainer}>
+        <Animated.View
+          style={[
+            styles.formContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
           {/* Monthly Investment */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               Monthly Investment <Text style={styles.currency}>(₹)</Text>
             </Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={monthlyInvestment}
-                  onChangeText={setMonthlyInvestment}
-                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                  selectionColor={COLORS.primary}
-                />
-              </View>
-              <View style={styles.quickActionButtons}>
-                <TouchableOpacity
-                  style={styles.quickButton}
-                  onPress={() => setMonthlyInvestment(
-                    (parseFloat(monthlyInvestment) - 1000 > 0 ? 
-                    parseFloat(monthlyInvestment) - 1000 : 0).toString()
-                  )}
-                >
-                  <Text style={styles.quickButtonText}>-1K</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.quickButton}
-                  onPress={() => setMonthlyInvestment(
-                    (parseFloat(monthlyInvestment) + 1000).toString()
-                  )}
-                >
-                  <Text style={styles.quickButtonText}>+1K</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={monthlyInvestment}
+                onChangeText={setMonthlyInvestment}
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                selectionColor="#8A2BE2"
+              />
             </View>
             <Slider
               style={styles.slider}
@@ -251,50 +315,28 @@ const SIPCalculator: React.FC = () => {
               step={1000}
               value={parseFloat(monthlyInvestment) || 5000}
               onValueChange={(value) => setMonthlyInvestment(value.toString())}
-              minimumTrackTintColor={COLORS.primary}
-              maximumTrackTintColor="rgba(255, 255, 255, 0.2)"
-              thumbTintColor={COLORS.primary}
+              minimumTrackTintColor="#8A2BE2"
+              maximumTrackTintColor="rgba(255, 255, 255, 0.15)"
+              thumbTintColor="#C9A1FF"
             />
             <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>₹1K</Text>
-              <Text style={styles.sliderLabel}>₹50K</Text>
-              <Text style={styles.sliderLabel}>₹100K</Text>
+              <Text style={styles.sliderMinLabel}>₹1,000</Text>
+              <Text style={styles.sliderMaxLabel}>₹1,00,000</Text>
             </View>
           </View>
 
           {/* Return Rate */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Expected Return Rate (%)</Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={returnRate}
-                  onChangeText={setReturnRate}
-                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                  selectionColor={COLORS.primary}
-                />
-              </View>
-              <View style={styles.quickActionButtons}>
-                <TouchableOpacity
-                  style={styles.quickButton}
-                  onPress={() => setReturnRate(
-                    (parseFloat(returnRate) - 1 > 0 ? 
-                    parseFloat(returnRate) - 1 : 0).toString()
-                  )}
-                >
-                  <Text style={styles.quickButtonText}>-1%</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.quickButton}
-                  onPress={() => setReturnRate(
-                    (parseFloat(returnRate) + 1).toString()
-                  )}
-                >
-                  <Text style={styles.quickButtonText}>+1%</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={returnRate}
+                onChangeText={setReturnRate}
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                selectionColor="#8A2BE2"
+              />
             </View>
             <Slider
               style={styles.slider}
@@ -303,50 +345,28 @@ const SIPCalculator: React.FC = () => {
               step={0.5}
               value={parseFloat(returnRate) || 12}
               onValueChange={(value) => setReturnRate(value.toString())}
-              minimumTrackTintColor={COLORS.primary}
-              maximumTrackTintColor="rgba(255, 255, 255, 0.2)"
-              thumbTintColor={COLORS.primary}
+              minimumTrackTintColor="#8A2BE2"
+              maximumTrackTintColor="rgba(255, 255, 255, 0.15)"
+              thumbTintColor="#C9A1FF"
             />
             <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>1%</Text>
-              <Text style={styles.sliderLabel}>15%</Text>
-              <Text style={styles.sliderLabel}>30%</Text>
+              <Text style={styles.sliderMinLabel}>1%</Text>
+              <Text style={styles.sliderMaxLabel}>30%</Text>
             </View>
           </View>
 
           {/* Time Period */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Time Period (Years)</Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={timePeriod}
-                  onChangeText={setTimePeriod}
-                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                  selectionColor={COLORS.primary}
-                />
-              </View>
-              <View style={styles.quickActionButtons}>
-                <TouchableOpacity
-                  style={styles.quickButton}
-                  onPress={() => setTimePeriod(
-                    (parseFloat(timePeriod) - 1 > 0 ? 
-                    parseFloat(timePeriod) - 1 : 0).toString()
-                  )}
-                >
-                  <Text style={styles.quickButtonText}>-1yr</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.quickButton}
-                  onPress={() => setTimePeriod(
-                    (parseFloat(timePeriod) + 1).toString()
-                  )}
-                >
-                  <Text style={styles.quickButtonText}>+1yr</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={timePeriod}
+                onChangeText={setTimePeriod}
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                selectionColor="#8A2BE2"
+              />
             </View>
             <Slider
               style={styles.slider}
@@ -355,75 +375,105 @@ const SIPCalculator: React.FC = () => {
               step={1}
               value={parseFloat(timePeriod) || 10}
               onValueChange={(value) => setTimePeriod(value.toString())}
-              minimumTrackTintColor={COLORS.primary}
-              maximumTrackTintColor="rgba(255, 255, 255, 0.2)"
-              thumbTintColor={COLORS.primary}
+              minimumTrackTintColor="#8A2BE2"
+              maximumTrackTintColor="rgba(255, 255, 255, 0.15)"
+              thumbTintColor="#C9A1FF"
             />
             <View style={styles.sliderLabels}>
-              <Text style={styles.sliderLabel}>1yr</Text>
-              <Text style={styles.sliderLabel}>15yrs</Text>
-              <Text style={styles.sliderLabel}>30yrs</Text>
+              <Text style={styles.sliderMinLabel}>1 yr</Text>
+              <Text style={styles.sliderMaxLabel}>30 yrs</Text>
             </View>
           </View>
-        </View>
-        
+        </Animated.View>
+          
         {/* Results Section */}
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.resultsContainer,
-            { transform: [{ scale: scaleAnim }] }
+            styles.resultSection,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
           ]}
         >
-          <View style={styles.totalValueContainer}>
-            <Text style={styles.totalValueLabel}>Future Value</Text>
-            <Text style={styles.totalValueAmount}>
-              ₹{formatNumber(totalValue)}
-            </Text>
-          </View>
+          <LinearGradient
+            colors={['#231537', '#4B0082']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.resultCardGradient}
+          >
+            <View style={styles.resultCard}>
+              <View style={styles.shineOverlay}>
+                <Animated.View 
+                  style={[
+                    styles.shimmerEffect,
+                    {
+                      transform: [{ translateX: shimmerPosition }]
+                    }
+                  ]}
+                >
+                  <LinearGradient
+                    colors={[
+                      'rgba(255,255,255,0)',
+                      'rgba(255,255,255,0.03)',
+                      'rgba(255,255,255,0.1)',
+                      'rgba(255,255,255,0.15)',
+                      'rgba(255,255,255,0.1)',
+                      'rgba(255,255,255,0.03)',
+                      'rgba(255,255,255,0)'
+                    ]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.shimmerGradient}
+                  />
+                </Animated.View>
+              </View>
+              
+              <View style={styles.resultHeaderRow}>
+                <Text style={styles.resultTitle}>Investment Growth</Text>
+                <Text style={styles.cagrValue}>CAGR: {cagr}%</Text>
+              </View>
+              
+              <Text style={styles.totalValueLabel}>Future Value</Text>
+              <Text style={styles.totalValue}>₹{formatNumber(totalValue)}</Text>
+              
+              <View style={styles.breakdownRow}>
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>Amount Invested</Text>
+                  <Text style={styles.breakdownValue}>₹{formatNumber(investedAmount)}</Text>
+                </View>
+                
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>Est. Returns</Text>
+                  <Text style={styles.breakdownValue}>₹{formatNumber(estimatedReturns)}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.inflationNotice}>
+                <Icon name="alert-circle-outline" size={16} color="#A68BD7" style={styles.inflationIcon} />
+                <Text style={styles.inflationText}>
+                  Inflation-adjusted value: ₹{formatNumber(inflationAdjustedValue)}
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
           
-          <View style={styles.breakdownContainer}>
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownLabel}>Invested Amount</Text>
-              <Text style={styles.breakdownValue}>
-                ₹{formatNumber(investedAmount)}
-              </Text>
-            </View>
-            
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownLabel}>Estimated Returns</Text>
-              <Text style={[styles.breakdownValue, styles.returnsValue]}>
-                ₹{formatNumber(estimatedReturns)}
-              </Text>
-            </View>
-            
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownLabel}>CAGR</Text>
-              <Text style={[styles.breakdownValue, styles.cagrValue]}>
-                {cagr}%
-              </Text>
-            </View>
-            
-            <View style={styles.breakdownItem}>
-              <Text style={styles.breakdownLabel}>Monthly Investment</Text>
-              <Text style={styles.breakdownValue}>
-                ₹{formatNumber(parseFloat(monthlyInvestment) || 0)} × {parseFloat(timePeriod) * 12 || 0} months
-              </Text>
-            </View>
-          </View>
-          
-          {/* Pie Chart */}
+          {/* Pie Chart - Centered */}
           <View style={styles.chartContainer}>
-            <PieChart
-              data={chartData}
-              width={Dimensions.get('window').width - 60}
-              height={180}
-              chartConfig={chartConfig}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="0"
-              absolute={false}
-              hasLegend={false}
-            />
+            <View style={styles.pieChartWrapper}>
+              <PieChart
+                data={chartData}
+                width={SCREEN_WIDTH - 80}
+                height={200}
+                chartConfig={chartConfig}
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft="0"
+                absolute={false}
+                hasLegend={false}
+                center={[0, 0]} 
+              />
+            </View>
             
             <View style={styles.chartLegend}>
               <View style={styles.legendItem}>
@@ -442,59 +492,150 @@ const SIPCalculator: React.FC = () => {
             </View>
           </View>
           
-          {/* Download or Share Button */}
-          <TouchableOpacity style={styles.actionButton}>
-            <LinearGradient
-              colors={COLORS.purpleGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.actionButtonGradient}
-            >
-              <Icon name="content-save" size={20} color="#fff" style={styles.actionButtonIcon} />
-              <Text style={styles.actionButtonText}>Save Summary</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Milestones */}
+          <View style={styles.milestonesSection}>
+            <Text style={styles.milestoneTitle}>Investment Milestones</Text>
+            
+            <View style={styles.milestoneRow}>
+              <View style={styles.milestoneItem}>
+                <LinearGradient
+                  colors={['rgba(35, 21, 55, 0.7)', 'rgba(75, 0, 130, 0.5)']}
+                  style={styles.milestoneIconContainer}
+                >
+                  <Icon name="calendar-clock" size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={styles.milestoneValue}>
+                  ₹{formatNumber(Math.round(totalValue * 0.25))}
+                </Text>
+                <Text style={styles.milestoneLabel}>
+                  {Math.round(parseFloat(timePeriod) * 0.25)} years
+                </Text>
+              </View>
+              
+              <View style={styles.milestoneItem}>
+                <LinearGradient
+                  colors={['rgba(35, 21, 55, 0.7)', 'rgba(75, 0, 130, 0.5)']}
+                  style={styles.milestoneIconContainer}
+                >
+                  <Icon name="calendar-check" size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={styles.milestoneValue}>
+                  ₹{formatNumber(Math.round(totalValue * 0.5))}
+                </Text>
+                <Text style={styles.milestoneLabel}>
+                  {Math.round(parseFloat(timePeriod) * 0.5)} years
+                </Text>
+              </View>
+              
+              <View style={styles.milestoneItem}>
+                <LinearGradient
+                  colors={['rgba(35, 21, 55, 0.7)', 'rgba(75, 0, 130, 0.5)']}
+                  style={styles.milestoneIconContainer}
+                >
+                  <Icon name="trophy-outline" size={20} color="#FFFFFF" />
+                </LinearGradient>
+                <Text style={styles.milestoneValue}>
+                  ₹{formatNumber(Math.round(totalValue * 0.75))}
+                </Text>
+                <Text style={styles.milestoneLabel}>
+                  {Math.round(parseFloat(timePeriod) * 0.75)} years
+                </Text>
+              </View>
+            </View>
+          </View>
         </Animated.View>
         
-        {/* Step-by-Step Calculation Section */}
+        {/* Step-by-step breakdown */}
         {showSteps && (
-          <View style={styles.stepsContainer}>
-            <Text style={styles.stepsTitle}>Step-by-Step Calculation</Text>
+          <Animated.View 
+            style={[
+              styles.stepsContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <Text style={styles.stepsHeading}>How SIP Calculation Works</Text>
             
             {steps.map((step, index) => (
               <View key={index} style={styles.stepItem}>
-                <View style={styles.stepHeader}>
-                  <View style={styles.stepNumberContainer}>
-                    <Text style={styles.stepNumber}>{index + 1}</Text>
-                  </View>
+                <View style={styles.stepNumberContainer}>
+                  <Text style={styles.stepNumber}>{index + 1}</Text>
+                </View>
+                <View style={styles.stepContent}>
                   <Text style={styles.stepTitle}>{step.title}</Text>
+                  <Text style={styles.stepDesc}>{step.description}</Text>
+                  <LinearGradient
+                    colors={['rgba(35, 21, 55, 0.5)', 'rgba(75, 0, 130, 0.3)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.formulaBox}
+                  >
+                    <Text style={styles.formula}>{step.formula}</Text>
+                  </LinearGradient>
+                  <Text style={styles.stepResult}>{step.result}</Text>
                 </View>
-                
-                <Text style={styles.stepDescription}>{step.description}</Text>
-                <View style={styles.formulaContainer}>
-                  <Text style={styles.formulaText}>{step.formula}</Text>
-                </View>
-                <Text style={styles.stepResult}>{step.result}</Text>
               </View>
             ))}
             
-            <View style={styles.mathFactsContainer}>
-              <Text style={styles.mathFactsTitle}>SIP Investment Insights</Text>
-              <Text style={styles.mathFact}>
-                • Power of compounding: Your money earns interest, and then that interest earns interest.
-              </Text>
-              <Text style={styles.mathFact}>
-                • Time impact: Doubling your investment period can more than triple your returns due to compounding.
-              </Text>
-              <Text style={styles.mathFact}>
-                • Return rate: A 2% increase in return rate can yield significantly higher results over longer periods.
+            <View style={styles.educationalInfo}>
+              <View style={styles.educationalHeader}>
+                <Icon name="lightbulb-on" size={22} color="#C9A1FF" />
+                <Text style={styles.educationalTitle}>What is CAGR?</Text>
+              </View>
+              <Text style={styles.educationalText}>
+                Compound Annual Growth Rate (CAGR) represents the annual rate of return 
+                that would be required for an investment to grow from its beginning value 
+                to its ending value, assuming the profits were reinvested at the end of each year.
               </Text>
             </View>
-          </View>
+            
+            <View style={styles.educationalInfo}>
+              <View style={styles.educationalHeader}>
+                <Icon name="cash-multiple" size={22} color="#C9A1FF" />
+                <Text style={styles.educationalTitle}>Power of Compounding</Text>
+              </View>
+              <Text style={styles.educationalText}>
+                Compounding allows your investments to grow exponentially over time as you earn returns 
+                not only on your principal amount but also on the accumulated returns. 
+                Starting early, even with smaller amounts, can lead to significant wealth creation over the long term.
+              </Text>
+            </View>
+            
+            <TouchableOpacity style={styles.closeStepsButton} onPress={() => setShowSteps(false)}>
+              <Text style={styles.closeStepsText}>Close</Text>
+            </TouchableOpacity>
+          </Animated.View>
         )}
         
-        {/* Bottom Padding for scrolling */}
-        <View style={{ height: 40 }} />
+        {/* Action Button */}
+        <Animated.View
+          style={[
+            styles.actionButtonContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }
+          ]}
+        >
+          <TouchableOpacity 
+            style={styles.actionButtonWrapper}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#231537', '#4B0082']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionButtonText}>Start Investing</Text>
+              <View style={styles.actionButtonIcon}>
+                <Icon name="arrow-right" size={22} color="#FFFFFF" />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </View>
   );
@@ -503,95 +644,117 @@ const SIPCalculator: React.FC = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#000000',
   },
   container: {
-    flexGrow: 1,
-    padding: 20,
+    paddingBottom: 40,
+  },
+  decorationContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  blurCircle: {
+    position: 'absolute',
+    borderRadius: 300,
+    opacity: 0.2,
+  },
+  // Removed blur circles as requested
+  headerContainer: {
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingHorizontal: 20,
+    paddingBottom: 15,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(10, 10, 10, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    ...SHADOWS.small,
-  },
-  headerText: {
-    color: COLORS.text,
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   infoButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(10, 10, 10, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    ...SHADOWS.small,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#A68BD7',
+    marginBottom: 25,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(25, 25, 35, 0.6)',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 5,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  activeTab: {
+    backgroundColor: '#4B0082',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#A68BD7',
+  },
+  activeTabText: {
+    color: '#FFFFFF',
   },
   formContainer: {
+    paddingHorizontal: 20,
     marginBottom: 24,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    color: COLORS.text,
     fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
     marginBottom: 12,
-    fontWeight: '500',
   },
   currency: {
-    color: COLORS.textDim,
-    fontSize: 14,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    color: '#C9A1FF',
+    fontWeight: '400',
   },
   inputContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(138, 43, 226, 0.3)',
-    borderRadius: 12,
-    height: 54,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    ...SHADOWS.small,
   },
   input: {
-    color: COLORS.text,
+    height: 50,
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '500',
-    padding: 0,
-  },
-  quickActionButtons: {
-    flexDirection: 'row',
-    marginLeft: 12,
-  },
-  quickButton: {
-    backgroundColor: 'rgba(138, 43, 226, 0.15)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginLeft: 8,
-    ...SHADOWS.small,
-  },
-  quickButtonText: {
-    color: COLORS.primary,
-    fontWeight: '600',
-    fontSize: 14,
   },
   slider: {
     width: '100%',
@@ -600,68 +763,135 @@ const styles = StyleSheet.create({
   sliderLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: -10,
+    paddingHorizontal: 5,
   },
-  sliderLabel: {
-    color: COLORS.textDim,
+  sliderMinLabel: {
     fontSize: 12,
+    color: '#A68BD7',
   },
-  resultsContainer: {
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
-    padding: 20,
+  sliderMaxLabel: {
+    fontSize: 12,
+    color: '#A68BD7',
+  },
+  resultSection: {
+    paddingHorizontal: 20,
     marginBottom: 24,
-    ...SHADOWS.medium,
   },
-  totalValueContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
+  resultCardGradient: {
+    borderRadius: 20,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8A2BE2',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
-  totalValueLabel: {
-    color: COLORS.textDim,
-    fontSize: 16,
-    marginBottom: 6,
+  resultCard: {
+    padding: 24,
+    borderRadius: 20,
+    alignItems: 'stretch',
+    overflow: 'hidden',
+    width: '100%',
   },
-  totalValueAmount: {
-    color: COLORS.text,
-    fontSize: 32,
-    fontWeight: 'bold',
+  shineOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
   },
-  breakdownContainer: {
-    marginBottom: 20,
+  shimmerEffect: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  breakdownItem: {
+  shimmerGradient: {
+    flex: 1,
+  },
+  resultHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  breakdownLabel: {
-    color: COLORS.textDim,
-    fontSize: 14,
-  },
-  breakdownValue: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  returnsValue: {
-    color: '#8A2BE2',
+  resultTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   cagrValue: {
-    color: '#9370DB',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#C9A1FF',
+  },
+  totalValueLabel: {
+    fontSize: 14,
+    color: '#A68BD7',
+    marginBottom: 8,
+    alignSelf: 'center',
+  },
+  totalValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 20,
+    alignSelf: 'center',
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  breakdownItem: {
+    flex: 1,
+  },
+  breakdownLabel: {
+    fontSize: 14,
+    color: '#A68BD7',
+    marginBottom: 4,
+  },
+  breakdownValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  inflationNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+    borderRadius: 8,
+    padding: 10,
+  },
+  inflationIcon: {
+    marginRight: 8,
+  },
+  inflationText: {
+    fontSize: 13,
+    color: '#A68BD7',
+    flex: 1,
   },
   chartContainer: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginBottom: 24,
+  },
+  pieChartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    width: '100%',
+    paddingHorizontal: 10,
   },
   chartLegend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
   },
   legendItem: {
     flexDirection: 'row',
@@ -675,113 +905,176 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   legendText: {
-    color: COLORS.text,
     fontSize: 14,
+    color: '#A68BD7',
   },
-  actionButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginTop: 10,
-    ...SHADOWS.medium,
-  },
-  actionButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-  },
-  actionButtonIcon: {
-    marginRight: 8,
-  },
-  actionButtonText: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  stepsContainer: {
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
-    padding: 20,
-    marginBottom: 24,
-    ...SHADOWS.medium,
-  },
-  stepsTitle: {
-    color: COLORS.text,
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  stepItem: {
+  milestonesSection: {
     marginBottom: 24,
   },
-  stepHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  stepNumberContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  stepNumber: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  stepTitle: {
-    color: COLORS.text,
+  milestoneTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 16,
   },
-  stepDescription: {
-    color: COLORS.textDim,
-    fontSize: 14,
+  milestoneRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  milestoneItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  milestoneIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
-    marginLeft: 34,
   },
-  formulaContainer: {
-    backgroundColor: 'rgba(138, 43, 226, 0.1)',
+  milestoneValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  milestoneLabel: {
+    fontSize: 12,
+    color: '#A68BD7',
+  },
+  stepsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  stepsHeading: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  stepNumberContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#8A2BE2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+    marginTop: 2,
+  },
+  stepNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  stepDesc: {
+    fontSize: 14,
+    color: '#A68BD7',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  formulaBox: {
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    marginLeft: 34,
+    borderRadius: 10,
+    marginBottom: 12,
   },
-  formulaText: {
-    color: COLORS.text,
+  formula: {
     fontSize: 14,
+    color: '#C9A1FF',
     fontWeight: '500',
   },
   stepResult: {
-    color: COLORS.primary,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    marginLeft: 34,
+    color: '#FFFFFF',
   },
-  mathFactsContainer: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: 'rgba(138, 43, 226, 0.05)',
+  educationalInfo: {
+    backgroundColor: 'rgba(25, 20, 40, 0.5)',
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
   },
-  mathFactsTitle: {
-    color: COLORS.text,
-    fontSize: 16,
-    fontWeight: '600',
+  educationalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  mathFact: {
-    color: COLORS.textDim,
+  educationalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 10,
+  },
+  educationalText: {
     fontSize: 14,
-    marginBottom: 8,
-    lineHeight: 20,
+    color: '#A68BD7',
+    lineHeight: 22,
+  },
+  closeStepsButton: {
+    backgroundColor: 'rgba(138, 43, 226, 0.2)',
+    borderRadius: 25,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  closeStepsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#C9A1FF',
+  },
+  actionButtonContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  actionButtonWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#8A2BE2',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  actionButton: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
+  actionButtonIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
