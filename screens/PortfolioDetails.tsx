@@ -118,7 +118,7 @@ const PortfolioDetails: React.FC = () => {
       shimmerValue.setValue(0);
       Animated.timing(shimmerValue, {
         toValue: 1,
-        duration: 3500, // Slower shimmer animation
+        duration: 2800, // Slower shimmer animation
         useNativeDriver: false,
       }).start(() => {
         setTimeout(runShimmer, 2000); // Longer pause between animations

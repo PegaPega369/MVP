@@ -319,7 +319,7 @@ const HomePage: React.FC = () => {
         />
         <InvestmentOptions
           onGoldPress={() => navigation.navigate('Gold', { uid })}
-          onSilverPress={() => console.log('P2P')}
+          onSilverPress={() => navigation.navigate('Silver',{uid})}
           onMutualFundPress={() => navigation.navigate('MutualFund', { uid })}
         />
         <QuickServices

@@ -171,14 +171,14 @@ const Navbar: React.FC<NavbarProps> = ({ uid, notificationCount = 0 }) => {
 
         <TouchableOpacity 
           style={styles.navButton} 
-          onPress={() => navigation.navigate('Shop', { uid })}
+          onPress={() => navigation.navigate('Streak', { uid })}
           activeOpacity={0.7}
         >
-          {renderIcon('investments', isActive('Shop'))}
-          <Text style={[styles.navLabel, isActive('Shop') && styles.activeLabel]}>
-            Invest
+          {renderIcon('investments', isActive('Streak'))}
+          <Text style={[styles.navLabel, isActive('Streak') && styles.activeLabel]}>
+            Streak
           </Text>
-          {isActive('Shop') && <View style={styles.activeIndicator} />}
+          {isActive('Streak') && <View style={styles.activeIndicator} />}
         </TouchableOpacity>
 
         <TouchableOpacity 

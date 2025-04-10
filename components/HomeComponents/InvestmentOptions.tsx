@@ -16,7 +16,7 @@ const { width } = Dimensions.get('window');
 interface InvestmentOptionsProps {
   onGoldPress: () => void;
   onMutualFundPress: () => void;
-  onP2PPress: () => void;
+  onSilverPress: () => void;
 }
 
 interface InvestmentCardProps {
@@ -34,7 +34,7 @@ interface InvestmentCardProps {
 const PremiumInvestmentOptions: React.FC<InvestmentOptionsProps> = ({
   onGoldPress,
   onMutualFundPress,
-  onP2PPress,
+  onSilverPress,
 }) => {
   return (
     <View style={styles.container}>
@@ -67,7 +67,7 @@ const PremiumInvestmentOptions: React.FC<InvestmentOptionsProps> = ({
           borderStartColor="rgba(192, 192, 192, 0.8)"
           borderEndColor="rgba(192, 192, 192, 0.2)"
           glowColor="rgba(192, 192, 192, 0.3)"
-          onPress={onP2PPress} 
+          onPress={onSilverPress} 
         />
         
         <InvestmentCard 

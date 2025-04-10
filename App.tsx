@@ -49,6 +49,8 @@ import ExpenseAnalysis from './screens/ExpenseAnalysis';
 import BudgetGoals from './screens/BudgetGoals';
 import PortfolioDetails from './screens/PortfolioDetails';
 import ReferralPage from './screens/ReferralPage';
+import SilverInvestment from './screens/Silver';
+import StreakPage from './screens/StreakPage';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -101,6 +103,7 @@ const App: React.FC = () => {
               <Stack.Screen name="GoalSavings2" component={GoalPage2} options={{ headerShown: false }} />
               <Stack.Screen name="GoalSavings3" component={GoldPage3} options={{ headerShown: false }} />
               <Stack.Screen name="GoalSavings4" component={GoalPage4} options={{ headerShown: false }} />
+              <Stack.Screen name="Silver" component={SilverInvestment} options={{ headerShown: false }} />
               <Stack.Screen name="SIP" component={SIPCalculator} options={{ headerShown: false }} />
               <Stack.Screen name="ID" component={InvestmentDetail} options={{ headerShown: false }} />
               <Stack.Screen name="AccountDetails" component={AccountDetails} options={{ headerShown: false }} />
@@ -112,6 +115,7 @@ const App: React.FC = () => {
               <Stack.Screen name="BiometricLock" component={BiometricLock} options={{ headerShown: false }} />
               <Stack.Screen name="HelpAndSupport" component={HelpAndSupport} options={{ headerShown: false }} />
               <Stack.Screen name="ReferralPage" component={ReferralPage} options={{ headerShown: false }} />
+              <Stack.Screen name="Streak" component={StreakPage} options={{ headerShown: false }} />
             </Stack.Navigator>
           </NavigationContainer>
         </AuthProvider>
