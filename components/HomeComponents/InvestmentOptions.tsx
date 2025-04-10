@@ -8,11 +8,13 @@ import {
   Platform,
   Animated 
 } from 'react-native';
-import { Svg, Path, Circle, Defs, LinearGradient, Stop, RadialGradient } from 'react-native-svg';
+import { Svg, Path, Circle, Defs, LinearGradient as SvgLinearGradient, Stop, RadialGradient } from 'react-native-svg';
+import LinearGradient from 'react-native-linear-gradient';
 import { COLORS } from './theme';
 
 const { width } = Dimensions.get('window');
 
+// Keep all your existing interfaces exactly the same
 interface InvestmentOptionsProps {
   onGoldPress: () => void;
   onMutualFundPress: () => void;
@@ -51,7 +53,7 @@ const PremiumInvestmentOptions: React.FC<InvestmentOptionsProps> = ({
           description="Physical Gold ETF"
           roi="+12.4%"
           iconType="gold"
-          gradientColors={['#261A00', '#4A3500', '#6B5000']}
+          gradientColors={['#261E0D', '#4A3A14', '#6B5019']}
           borderStartColor="rgba(255, 215, 0, 0.8)"
           borderEndColor="rgba(255, 215, 0, 0.2)"
           glowColor="rgba(255, 215, 0, 0.3)"
@@ -63,7 +65,7 @@ const PremiumInvestmentOptions: React.FC<InvestmentOptionsProps> = ({
           description="Silver Commodity"
           roi="+8.7%"
           iconType="silver"
-          gradientColors={['#262626', '#404040', '#595959']}
+          gradientColors={['#2A2A2A', '#444444', '#5E5E5E']}
           borderStartColor="rgba(192, 192, 192, 0.8)"
           borderEndColor="rgba(192, 192, 192, 0.2)"
           glowColor="rgba(192, 192, 192, 0.3)"
@@ -75,7 +77,7 @@ const PremiumInvestmentOptions: React.FC<InvestmentOptionsProps> = ({
           description="Mutual Fund Index"
           roi="+16.8%"
           iconType="funds"
-          gradientColors={['#0A1A40', '#0F2861', '#1A3980']}
+          gradientColors={['#0A1F4D', '#102E74', '#1A3D8F']}
           borderStartColor="rgba(100, 149, 237, 0.8)"
           borderEndColor="rgba(100, 149, 237, 0.2)"
           glowColor="rgba(100, 149, 237, 0.3)"
@@ -97,6 +99,7 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
   glowColor,
   onPress 
 }) => {
+  // Keep all your existing hooks and animations exactly the same
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const [isPressing, setIsPressing] = useState(false);
@@ -144,6 +147,7 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
     outputRange: [0.5, 0.8]
   });
 
+  // Keep your existing renderIcon function exactly the same
   const renderIcon = () => {
     switch(iconType) {
       case 'gold':
@@ -151,10 +155,10 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
           <View style={styles.iconContainer}>
             <Svg width="40" height="40" viewBox="0 0 24 24">
               <Defs>
-                <LinearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="1">
+                <SvgLinearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="1">
                   <Stop offset="0" stopColor="#FFD700" stopOpacity="1" />
                   <Stop offset="1" stopColor="#FFA500" stopOpacity="1" />
-                </LinearGradient>
+                </SvgLinearGradient>
                 <RadialGradient id="goldGlow" cx="12" cy="12" rx="12" ry="12" fx="12" fy="12" gradientUnits="userSpaceOnUse">
                   <Stop offset="0" stopColor={glowColor} stopOpacity="0.8" />
                   <Stop offset="1" stopColor={glowColor} stopOpacity="0" />
@@ -170,10 +174,10 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
           <View style={styles.iconContainer}>
             <Svg width="40" height="40" viewBox="0 0 24 24">
               <Defs>
-                <LinearGradient id="silverGradient" x1="0" y1="0" x2="1" y2="1">
+                <SvgLinearGradient id="silverGradient" x1="0" y1="0" x2="1" y2="1">
                   <Stop offset="0" stopColor="#C0C0C0" stopOpacity="1" />
                   <Stop offset="1" stopColor="#A9A9A9" stopOpacity="1" />
-                </LinearGradient>
+                </SvgLinearGradient>
                 <RadialGradient id="silverGlow" cx="12" cy="12" rx="12" ry="12" fx="12" fy="12" gradientUnits="userSpaceOnUse">
                   <Stop offset="0" stopColor={glowColor} stopOpacity="0.8" />
                   <Stop offset="1" stopColor={glowColor} stopOpacity="0" />
@@ -189,10 +193,10 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
           <View style={styles.iconContainer}>
             <Svg width="40" height="40" viewBox="0 0 24 24">
               <Defs>
-                <LinearGradient id="fundsGradient" x1="0" y1="0" x2="1" y2="1">
+                <SvgLinearGradient id="fundsGradient" x1="0" y1="0" x2="1" y2="1">
                   <Stop offset="0" stopColor="#4B9CFF" stopOpacity="1" />
                   <Stop offset="1" stopColor="#2563EB" stopOpacity="1" />
-                </LinearGradient>
+                </SvgLinearGradient>
                 <RadialGradient id="fundsGlow" cx="12" cy="12" rx="12" ry="12" fx="12" fy="12" gradientUnits="userSpaceOnUse">
                   <Stop offset="0" stopColor={glowColor} stopOpacity="0.8" />
                   <Stop offset="1" stopColor={glowColor} stopOpacity="0" />
@@ -216,13 +220,17 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
         transform: [{ scale: scaleAnim }],
       }
     ]}> 
-      <View style={[
-        styles.cardContainer,
-        {
-          backgroundColor: gradientColors[0],
-          borderColor: isPressing ? borderStartColor : 'transparent',
-        }
-      ]}>
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.cardContainer,
+          {
+            borderColor: isPressing ? borderStartColor : 'transparent',
+          }
+        ]}
+      >
         <TouchableOpacity 
           style={styles.card} 
           onPressIn={handlePressIn}
@@ -235,16 +243,13 @@ const InvestmentCard: React.FC<InvestmentCardProps> = React.memo(({
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.description}>{description}</Text>
           </View>
-          {/* <View style={styles.roiContainer}>
-            <Text style={styles.roiText}>{roi}</Text>
-            <Text style={styles.roiLabel}>Annual</Text>
-          </View> */}
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
     </Animated.View>
   );
 });
 
+// Keep all your existing styles exactly the same
 const styles = StyleSheet.create({
   container: {
     marginVertical: 24,

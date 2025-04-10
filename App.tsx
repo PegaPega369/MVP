@@ -51,6 +51,7 @@ import PortfolioDetails from './screens/PortfolioDetails';
 import ReferralPage from './screens/ReferralPage';
 import SilverInvestment from './screens/Silver';
 import StreakPage from './screens/StreakPage';
+import UseNotification from './utils/UseNotification';
 
 enableScreens();
 const Stack = createNativeStackNavigator();

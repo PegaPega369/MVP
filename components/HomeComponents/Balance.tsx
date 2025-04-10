@@ -1,4 +1,3 @@
-// components/Balance.tsx
 import React from 'react';
 import {
   View,
@@ -25,19 +24,19 @@ const Balance: React.FC<BalanceProps> = ({onDetailsPress}) => {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   return (
     <View style={styles.container}>
-      <Shadow
+      {/* <Shadow
         distance={20}
         startColor="#AA00FF40"
         endColor="#AA00FF00"
         offset={[0, 0]}
-        style={[styles.shadowContainer, {width: containerWidth}]}>
+        style={[styles.shadowContainer, {width: containerWidth}]}> */}
         <LinearGradient
           colors={['#000000', '#1F1F1F']}
           start={{x: 0, y: 0}}
           end={{x: 1, y: 1}}
           style={styles.gradientContainer}>
           <LinearGradient
-            colors={['black', '#8A2BE2']}
+            colors={['#1C1C1E', '#2C2C2E']}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}
             style={styles.innerGlow}
@@ -83,7 +82,7 @@ const Balance: React.FC<BalanceProps> = ({onDetailsPress}) => {
             </View>
           </View>
         </LinearGradient>
-      </Shadow>
+      {/* </Shadow> */}
     </View>
   );
 };

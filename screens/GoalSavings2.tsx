@@ -117,15 +117,7 @@ const GoalPage2: React.FC = () => {
         >
           <Text style={styles.titleText}>How long do you plan to invest?</Text>
           
-          {/* Investment Duration Box - Moved to the top */}
-          <View style={styles.durationTextContainer}>
-            <Text style={styles.durationLabel}>Investment Duration</Text>
-            <Text style={styles.durationText}>
-              {investmentDuration}-{investmentDuration + 1} Years
-            </Text>
-          </View>
-          
-          {/* Plant Animation */}
+          {/* Plant Animation - Made smaller */}
           <View style={styles.animationContainer}>
             <LottieView
               ref={plantRef}
@@ -135,7 +127,7 @@ const GoalPage2: React.FC = () => {
             />
           </View>
           
-          {/* Slider Section */}
+          {/* Slider Section - Moved below animation */}
           <View style={styles.sliderSection}>
             <Slider
               style={styles.slider}
@@ -170,6 +162,14 @@ const GoalPage2: React.FC = () => {
                 </View>
               ))}
             </View>
+          </View>
+          
+          {/* Investment Duration Box - Moved below slider */}
+          <View style={styles.durationTextContainer}>
+            <Text style={styles.durationLabel}>Investment Duration</Text>
+            <Text style={styles.durationText}>
+              {investmentDuration}-{investmentDuration + 1} Years
+            </Text>
           </View>
         </Animated.View>
       </ScrollView>
@@ -245,16 +245,16 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10, // Reduced margin
+    marginBottom: 20,
     textAlign: 'center',
   },
   animationContainer: {
-    marginTop: 0,
-    marginBottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    width: SCREEN_WIDTH * 0.4, // Reduced size
-    height: SCREEN_WIDTH * 0.4, // Reduced size
+    width: SCREEN_WIDTH * 0.5, // Made smaller from 0.4 to 0.35
+    height: SCREEN_WIDTH * 0.5, // Made smaller from 0.4 to 0.35
+    marginBottom: 30, // Added margin to create space before slider
+    marginTop:30,
   },
   plantAnimation: {
     width: '100%',
@@ -262,7 +262,8 @@ const styles = StyleSheet.create({
   },
   sliderSection: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 20, // Added margin to create space between slider and duration box
   },
   slider: {
     width: '100%',
@@ -298,19 +299,13 @@ const styles = StyleSheet.create({
   },
   durationTextContainer: {
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
-    padding: 8, // Reduced padding
-    borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
-    ...SHADOWS.small,
+    marginTop: 25,
+    padding: 0,
   },
   durationLabel: {
     color: COLORS.textDim,
     fontSize: 14,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   durationText: {
     color: COLORS.text,

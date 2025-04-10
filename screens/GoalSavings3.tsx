@@ -318,12 +318,12 @@ const styles = StyleSheet.create({
     height: 40,
   },
   descriptionContainer: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 16,
     padding: 16,
     marginTop: 16,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(138, 43, 226, 0.05)',
     ...SHADOWS.small,
   },
   descriptionText: {
@@ -335,10 +335,11 @@ const styles = StyleSheet.create({
   riskDetails: {
     marginTop: 20,
     padding: 16,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    marginBottom:10,
   },
   riskDetailText: {
     color: COLORS.textDim,

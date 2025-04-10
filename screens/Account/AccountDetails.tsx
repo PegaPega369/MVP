@@ -20,7 +20,6 @@ import firestore from '@react-native-firebase/firestore';
 
 const { width } = Dimensions.get('window');
 
-// Define interfaces for TypeScript
 interface RouteParams {
   uid: string;
 }
@@ -33,16 +32,7 @@ interface UserData {
   dateOfBirth: string;
   address: string;
   pincode: string;
-  [key: string]: string; // Index signature for dynamic field access
-}
-
-interface CustomInputProps {
-  label: string;
-  value: string;
-  onChangeText: (field: string, value: string) => void;
-  field: string;
-  editable?: boolean;
-  keyboardType?: 'default' | 'number-pad' | 'email-address' | 'phone-pad';
+  [key: string]: string;
 }
 
 const AccountDetails: React.FC = () => {
@@ -51,15 +41,11 @@ const AccountDetails: React.FC = () => {
   const uid = params?.uid || 'defaultUser';
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
-  // Animation for the save button
   const [buttonScale] = useState<Animated.Value>(new Animated.Value(1));
-
-  // Loading and error states
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state with initial empty values
   const [formData, setFormData] = useState<UserData>({
     firstName: '',
     lastName: '',
@@ -70,10 +56,8 @@ const AccountDetails: React.FC = () => {
     pincode: '',
   });
 
-  // Editable state tracking
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // Fetch user data from Firebase
   useEffect(() => {
     const fetchUserData = async (): Promise<void> => {
       setLoading(true);
@@ -84,8 +68,6 @@ const AccountDetails: React.FC = () => {
         
         if (userDoc.exists) {
           const userData = userDoc.data() as Partial<UserData>;
-          
-          // Update form data with fetched values, keeping default values for missing fields
           setFormData({
             firstName: userData.firstName || '',
             lastName: userData.lastName || '',
@@ -109,7 +91,6 @@ const AccountDetails: React.FC = () => {
     fetchUserData();
   }, [uid]);
 
-  // Save user data to Firebase
   const saveUserData = async (): Promise<void> => {
     setSaving(true);
     
@@ -121,6 +102,7 @@ const AccountDetails: React.FC = () => {
       
       Alert.alert('Success', 'Your profile has been updated successfully.');
       setIsEditing(false);
+      navigation.navigate('Profile', { uid });
     } catch (err) {
       console.error('Error saving user data:', err);
       Alert.alert('Error', 'Failed to save changes. Please try again.');
@@ -130,7 +112,6 @@ const AccountDetails: React.FC = () => {
   };
 
   const handleInputChange = (field: string, value: string): void => {
-    // Using a function approach for state updates to ensure we don't lose focus
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -139,10 +120,8 @@ const AccountDetails: React.FC = () => {
 
   const toggleEditMode = (): void => {
     if (isEditing) {
-      // If we're currently editing, save changes
       saveUserData();
     } else {
-      // Otherwise, enter edit mode
       setIsEditing(true);
     }
   };
@@ -165,39 +144,6 @@ const AccountDetails: React.FC = () => {
     }).start();
   };
 
-  // Custom Input component
-  const CustomInput: React.FC<CustomInputProps> = ({ 
-    label, 
-    value, 
-    onChangeText, 
-    field, 
-    editable = true,
-    keyboardType = 'default' 
-  }) => {
-    // Using ref to prevent keyboard dismissal
-    const inputRef = React.useRef<TextInput>(null);
-    
-    return (
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        <TextInput
-          ref={inputRef}
-          style={[
-            styles.input,
-            !isEditing && styles.inputDisabled
-          ]}
-          value={value}
-          onChangeText={(text) => onChangeText(field, text)}
-          editable={isEditing && editable}
-          placeholderTextColor={PROFILE_COLORS.textMuted}
-          keyboardType={keyboardType}
-          blurOnSubmit={false}
-        />
-      </View>
-    );
-  };
-
-  // Show loading indicator while fetching data
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -225,7 +171,6 @@ const AccountDetails: React.FC = () => {
     );
   }
 
-  // Show error message if there's an error
   if (error) {
     return (
       <View style={styles.container}>
@@ -250,7 +195,7 @@ const AccountDetails: React.FC = () => {
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={() => navigation.replace('AccountDetails', { uid })}
+            onPress={() => navigation.navigate('AccountDetails', { uid })}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
@@ -261,7 +206,6 @@ const AccountDetails: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with back button */}
       <LinearGradient
         colors={PROFILE_COLORS.darkPurpleGradient}
         start={{ x: 0, y: 0 }}
@@ -297,70 +241,118 @@ const AccountDetails: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
           
-          <CustomInput 
-            label="First Name" 
-            value={formData.firstName} 
-            onChangeText={handleInputChange} 
-            field="firstName" 
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>First Name</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.firstName}
+              onChangeText={(text) => handleInputChange('firstName', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+            />
+          </View>
           
-          <CustomInput 
-            label="Last Name" 
-            value={formData.lastName} 
-            onChangeText={handleInputChange} 
-            field="lastName" 
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.lastName}
+              onChangeText={(text) => handleInputChange('lastName', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+            />
+          </View>
           
-          <CustomInput 
-            label="Date of Birth" 
-            value={formData.dateOfBirth} 
-            onChangeText={handleInputChange} 
-            field="dateOfBirth" 
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Date of Birth</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.dateOfBirth}
+              onChangeText={(text) => handleInputChange('dateOfBirth', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+            />
+          </View>
         </View>
 
         {/* Contact Information Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Information</Text>
           
-          <CustomInput 
-            label="Email" 
-            value={formData.email} 
-            onChangeText={handleInputChange} 
-            field="email"
-            keyboardType="email-address" 
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.email}
+              onChangeText={(text) => handleInputChange('email', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+              keyboardType="email-address"
+            />
+          </View>
           
-          <CustomInput 
-            label="Phone Number" 
-            value={formData.phone} 
-            onChangeText={handleInputChange} 
-            field="phone"
-            keyboardType="phone-pad"
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.phone}
+              onChangeText={(text) => handleInputChange('phone', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+              keyboardType="phone-pad"
+            />
+          </View>
         </View>
 
         {/* Address Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Address</Text>
           
-          <CustomInput 
-            label="Address" 
-            value={formData.address} 
-            onChangeText={handleInputChange} 
-            field="address" 
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Address</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.address}
+              onChangeText={(text) => handleInputChange('address', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+            />
+          </View>
           
-          <CustomInput 
-            label="Pincode" 
-            value={formData.pincode} 
-            onChangeText={handleInputChange} 
-            field="pincode"
-            keyboardType="number-pad" 
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Pincode</Text>
+            <TextInput
+              style={[
+                styles.input,
+                !isEditing && styles.inputDisabled
+              ]}
+              value={formData.pincode}
+              onChangeText={(text) => handleInputChange('pincode', text)}
+              editable={isEditing}
+              placeholderTextColor={PROFILE_COLORS.textMuted}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
-        {/* Save Button (only shown when editing) */}
         {isEditing && (
           <TouchableOpacity
             activeOpacity={0.9}
@@ -389,13 +381,13 @@ const AccountDetails: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* Add some space at the bottom */}
         <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
 };
 
+// Keep all your existing styles exactly the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -407,7 +399,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    paddingTop: 50, // Additional padding for status bar
+    paddingTop: 50,
   },
   backButton: {
     width: 40,
@@ -485,7 +477,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Loading styles
   loadingContainer: {
     flex: 1,
     backgroundColor: PROFILE_COLORS.background,
@@ -502,7 +493,6 @@ const styles = StyleSheet.create({
     color: PROFILE_COLORS.text,
     textAlign: 'center',
   },
-  // Error styles
   errorContainer: {
     flex: 1,
     justifyContent: 'center',

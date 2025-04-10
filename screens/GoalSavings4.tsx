@@ -356,15 +356,18 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     marginTop: 10,
+    
   },
   inputRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 24,
+    
   },
   amountInputContainer: {
     flex: 3,
     marginRight: 12,
+    
   },
   yearInputContainer: {
     flex: 2,
@@ -377,10 +380,10 @@ const styles = StyleSheet.create({
   rupeesInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     paddingHorizontal: 16,
     ...SHADOWS.small,
   },
@@ -394,6 +397,7 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 16,
     paddingVertical: 12,
+    
   },
   yearPickerContainer: {
     position: 'relative',
@@ -403,12 +407,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     ...SHADOWS.small,
   },
   yearText: {
@@ -420,10 +424,10 @@ const styles = StyleSheet.create({
     top: 52,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
+    backgroundColor: 'rgba(10, 10, 10, 0.85)',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     overflow: 'hidden',
     ...SHADOWS.medium,
     zIndex: 100,
@@ -449,12 +453,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+    ...SHADOWS.small,
   },
   inflationText: {
     fontSize: 16,
@@ -468,14 +473,16 @@ const styles = StyleSheet.create({
     width: '70%', // Reduced width to prevent overflow
   },
   summaryContainer: {
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cardDark,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     ...SHADOWS.small,
   },
+
+
   summaryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -492,7 +499,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomColor: '(255, 255, 255, 0.05)',
   },
   summaryLabel: {
     fontSize: 14,

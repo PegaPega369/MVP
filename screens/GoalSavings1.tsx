@@ -20,7 +20,13 @@ interface RouteParams {
   uid: string;
 }
 
-const GoalCard = ({ title, icon, onPress }) => {
+interface GoalCardProps {
+  title: string;
+  icon: any; // Image source
+  onPress: () => void;
+}
+
+const GoalCard: React.FC<GoalCardProps> = ({ title, icon, onPress }) => {
   const [scaleAnim] = useState(new Animated.Value(1));
   
   const handlePressIn = () => {
@@ -66,7 +72,8 @@ const GoalPage1: React.FC = () => {
   const [purpose, setPurpose] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const route = useRoute();
-  const { uid } = route.params as RouteParams;
+  const params = route.params as RouteParams || { uid: '0' };
+  const { uid } = params;
   
   // Animation values - starting fully visible to prevent loading flash
   const fadeAnim = useState(new Animated.Value(1))[0];
@@ -116,7 +123,7 @@ const GoalPage1: React.FC = () => {
     },
   ];
   
-  const handleSelectCategory = (category) => {
+  const handleSelectCategory = (category: string) => {
     setPurpose(category);
   };
   
@@ -272,15 +279,15 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   input: {
-    backgroundColor: COLORS.background,
-    color: COLORS.text,
-    borderRadius: 12,
+    flexDirection: 'row',
+    backgroundColor: COLORS.cardDark,
+    borderRadius: 8,
     padding: 16,
-    marginBottom: 8,
-    fontSize: 16,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
     ...SHADOWS.small,
+  
   },
   inputHintText: {
     color: COLORS.textDim,
@@ -306,27 +313,29 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 8,
-    paddingHorizontal: 2,
   },
   goalCardContainer: {
-    width: '32%',
+    width: '31%',
     aspectRatio: 1,
     marginBottom: 12,
-  },
-  goalCard: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(138, 43, 226, 0.3)',
-    ...SHADOWS.medium,
   },
-  suggestionIcon: {
+  goalCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+  },
+  iconContainer: {
     width: 44,
     height: 44,
+    marginBottom: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  suggestionIcon: {
+    width: 64,
+    height: 64,
     marginBottom: 8,
     resizeMode: 'contain',
   },
